@@ -1116,10 +1116,10 @@ const GreenLeaveEvents= () => {
     let animationId;
 
     const init = () => {
-      // Scene
+      // 1️⃣ Scene
       scene = new THREE.Scene();
 
-      // Camera
+      // 2️⃣ Camera
       camera = new THREE.PerspectiveCamera(
         70,
         window.innerWidth / window.innerHeight,
@@ -1127,21 +1127,23 @@ const GreenLeaveEvents= () => {
         20
       );
 
-      // Renderer
+      // 3️⃣ Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
       mountRef.current.appendChild(renderer.domElement);
-      mountRef.current.appendChild(ARButton.createButton(renderer));
+      mountRef.current.appendChild(
+        ARButton.createButton(renderer, { requiredFeatures: ["hit-test"] })
+      );
 
-      // Light
+      // 4️⃣ Light
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(light);
 
-      // Start first step
+      // 5️⃣ Start first step
       showStep(currentStep);
 
-      // Animation loop
+      // 6️⃣ Animation loop
       const animate = () => {
         animationId = requestAnimationFrame(animate);
         const delta = clock.current.getDelta();
@@ -1150,14 +1152,14 @@ const GreenLeaveEvents= () => {
       };
       animate();
 
-      // Handle resize
+      // 7️⃣ Handle resize
       window.addEventListener("resize", () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
-      // Show step function
+      // 8️⃣ Show step function
       function showStep(index) {
         // Clear old objects
         while (scene.children.length > 0) {
@@ -1166,49 +1168,33 @@ const GreenLeaveEvents= () => {
 
         const step = steps[index];
 
-        // Add 3D text (optional, can skip if using HTML overlay)
-        const textMesh = makeText(step.text);
-        textMesh.position.set(0, 0.3, -1);
-        scene.add(textMesh);
-
         // Load 3D model
         const loader = new GLTFLoader();
-        loader.load(step.model, (gltf) => {
-          const model = gltf.scene;
-          model.position.set(0, -0.3, -1);
-          model.scale.set(0.4, 0.4, 0.4);
-          scene.add(model);
+        loader.load(
+          step.model,
+          (gltf) => {
+            const model = gltf.scene;
+            model.position.set(0, -0.3, -1);
+            model.scale.set(0.4, 0.4, 0.4);
+            scene.add(model);
 
-          mixerRef.current = new THREE.AnimationMixer(model);
-          if (gltf.animations.length > 0) {
-            const action = mixerRef.current.clipAction(gltf.animations[0]);
-            action.play();
-          }
-        });
+            mixerRef.current = new THREE.AnimationMixer(model);
+            if (gltf.animations.length > 0) {
+              const action = mixerRef.current.clipAction(gltf.animations[0]);
+              action.play();
+            }
+          },
+          undefined,
+          (error) => console.error("Error loading model:", error)
+        );
 
         // Schedule next step
         if (index < steps.length - 1) {
           setTimeout(() => {
             setCurrentStep(index + 1);
             showStep(index + 1);
-          }, 5000);
+          }, 5000); // 5 seconds per step
         }
-      }
-
-      // Helper: 3D canvas text
-      function makeText(message) {
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        context.font = "40px Arial";
-        context.fillStyle = "white";
-        context.fillText(message, 10, 50);
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-        });
-        const geometry = new THREE.PlaneGeometry(1.8, 0.4);
-        return new THREE.Mesh(geometry, material);
       }
     };
 
@@ -1216,17 +1202,19 @@ const GreenLeaveEvents= () => {
 
     return () => {
       cancelAnimationFrame(animationId);
-      mountRef.current.removeChild(mountRef.current.firstChild);
+      if (mountRef.current) mountRef.current.innerHTML = "";
       window.removeEventListener("resize", () => {});
     };
   }, []);
 
   return (
     <div className="relative w-screen h-screen">
+      {/* Three.js AR Canvas */}
       <div ref={mountRef} className="w-full h-full" />
+
       {/* Tailwind overlay instructions */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white p-2 rounded">
-        Step {currentStep + 1}: {steps[currentStep]?.text}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white p-3 rounded-lg z-50 text-center">
+        {steps[currentStep]?.text || "Loading..."}
       </div>
     </div>
   );
