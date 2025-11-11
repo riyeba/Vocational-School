@@ -1293,9 +1293,9 @@ import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const steps = [
-  { text: "Step 1: Wet your hands", model: "/two_hands.glb" },
-  { text: "Step 2: Rub palms together", model: "/two_hands.glb" },
-  { text: "Step 3: Scrub between fingers", model: "/two_hands.glb" },
+  { text: "Step 1: Wet your hands", model: "/image/two_hands.glb" },
+  { text: "Step 2: Rub palms together", model: "/image/two_hands.glb" },
+  { text: "Step 3: Scrub between fingers", model: "/image/two_hands.glb" }, 
 ];
 
 const GreenLeaveEvents = () => {
@@ -1432,7 +1432,7 @@ const GreenLeaveEvents = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-black">
+    <div className="relative w-screen h-screen overflow-hidden">
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
