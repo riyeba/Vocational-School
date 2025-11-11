@@ -1110,6 +1110,8 @@ const GreenLeaveEvents = () => {
   const mixerRef = useRef(null);
   const clock = useRef(new THREE.Clock());
   const [currentStep, setCurrentStep] = useState(0);
+  const [isARActive, setIsARActive] = useState(false);
+  const stepIndexRef = useRef(0);
 
   useEffect(() => {
     let scene, camera, renderer;
@@ -1154,19 +1156,35 @@ const GreenLeaveEvents = () => {
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(light);
 
-      // 5️⃣ Start first step
-      showStep(currentStep);
+      // 5️⃣ Detect when AR session starts
+      renderer.xr.addEventListener('sessionstart', () => {
+        setIsARActive(true);
+        stepIndexRef.current = 0;
+        setCurrentStep(0);
+        showStep(0);
+      });
 
-      // 6️⃣ Animation loop
-      const animate = () => {
-        animationId = requestAnimationFrame(animate);
+      // 6️⃣ Detect when AR session ends
+      renderer.xr.addEventListener('sessionend', () => {
+        setIsARActive(false);
+        // Clear the scene
+        const objectsToRemove = [];
+        scene.children.forEach(child => {
+          if (!(child instanceof THREE.Light)) {
+            objectsToRemove.push(child);
+          }
+        });
+        objectsToRemove.forEach(obj => scene.remove(obj));
+      });
+
+      // 7️⃣ Animation loop
+      renderer.setAnimationLoop(() => {
         const delta = clock.current.getDelta();
         if (mixerRef.current) mixerRef.current.update(delta);
         renderer.render(scene, camera);
-      };
-      animate();
+      });
 
-      // 7️⃣ Handle resize
+      // 8️⃣ Handle resize
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1174,7 +1192,7 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
-      // 8️⃣ Show step function
+      // 9️⃣ Show step function
       function showStep(index) {
         // Clear old objects except lights
         const objectsToRemove = [];
@@ -1211,6 +1229,7 @@ const GreenLeaveEvents = () => {
         if (index < steps.length - 1) {
           setTimeout(() => {
             const nextStep = index + 1;
+            stepIndexRef.current = nextStep;
             setCurrentStep(nextStep);
             showStep(nextStep);
           }, 5000); // 5 seconds per step
@@ -1219,7 +1238,7 @@ const GreenLeaveEvents = () => {
 
       // Cleanup function
       return () => {
-        cancelAnimationFrame(animationId);
+        renderer.setAnimationLoop(null);
         window.removeEventListener("resize", handleResize);
       };
     };
@@ -1235,20 +1254,32 @@ const GreenLeaveEvents = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div className="relative w-screen h-screen overflow-hidden bg-black">
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Tailwind overlay instructions - positioned above everything */}
-      <div 
-        ref={overlayRef}
-        className="fixed top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white px-6 py-3 rounded-lg text-center pointer-events-none max-w-md"
-        style={{ zIndex: 9999 }}
-      >
-        <p className="text-lg font-semibold">
-          {steps[currentStep]?.text || "Loading..."}
-        </p>
-      </div>
+      {/* Show overlay only when AR is active */}
+      {isARActive && (
+        <div 
+          ref={overlayRef}
+          className="fixed top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white px-6 py-3 rounded-lg text-center pointer-events-none max-w-md"
+          style={{ zIndex: 9999 }}
+        >
+          <p className="text-lg font-semibold">
+            {steps[currentStep]?.text || "Loading..."}
+          </p>
+        </div>
+      )}
+
+      {/* Instructions before AR starts */}
+      {!isARActive && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
+            <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
+            <p className="text-sm">Click &quot;Start AR&quot; to begin the interactive hand washing guide</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
