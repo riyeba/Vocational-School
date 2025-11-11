@@ -1084,7 +1084,6 @@
 //   );
 // }
 
-
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
@@ -1093,7 +1092,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 const steps = [
   {
     text: "Step 1: Wet your hands",
-    model: "https://example.com/models/wet_hands.glb",
+    model: "/two_hands.glb",
   },
   {
     text: "Step 2: Rub palms together",
@@ -1101,14 +1100,15 @@ const steps = [
   },
   {
     text: "Step 3: Scrub between fingers",
-    model: "https://example.com/models/scrub_fingers.glb",
+    model: "/two_hands.glb",
   },
 ];
 
-const GreenLeaveEvents= () => {
+const GreenLeaveEvents = () => {
   const mountRef = useRef(null);
   const mixerRef = useRef(null);
   const clock = useRef(new THREE.Clock());
+  const modelRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
@@ -1116,10 +1116,10 @@ const GreenLeaveEvents= () => {
     let animationId;
 
     const init = () => {
-      // 1️⃣ Scene
+      // Scene
       scene = new THREE.Scene();
 
-      // 2️⃣ Camera
+      // Camera
       camera = new THREE.PerspectiveCamera(
         70,
         window.innerWidth / window.innerHeight,
@@ -1127,7 +1127,7 @@ const GreenLeaveEvents= () => {
         20
       );
 
-      // 3️⃣ Renderer
+      // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
@@ -1136,14 +1136,11 @@ const GreenLeaveEvents= () => {
         ARButton.createButton(renderer, { requiredFeatures: ["hit-test"] })
       );
 
-      // 4️⃣ Light
-      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      scene.add(light);
+      // Lights (stay in scene)
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      scene.add(hemiLight);
 
-      // 5️⃣ Start first step
-      showStep(currentStep);
-
-      // 6️⃣ Animation loop
+      // Animation loop
       const animate = () => {
         animationId = requestAnimationFrame(animate);
         const delta = clock.current.getDelta();
@@ -1152,24 +1149,35 @@ const GreenLeaveEvents= () => {
       };
       animate();
 
-      // 7️⃣ Handle resize
-      window.addEventListener("resize", () => {
+      // Handle resize
+      const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-      });
+      };
+      window.addEventListener("resize", handleResize);
 
-      // 8️⃣ Show step function
+      // Start first step
+      showStep(currentStep);
+
+      // Cleanup
+      return () => {
+        cancelAnimationFrame(animationId);
+        if (mountRef.current) mountRef.current.innerHTML = "";
+        window.removeEventListener("resize", handleResize);
+      };
+
+      // Function to show a step
       function showStep(index) {
-        // Clear old objects
-        while (scene.children.length > 0) {
-          scene.remove(scene.children[0]);
+        // Remove previous model
+        if (modelRef.current) {
+          scene.remove(modelRef.current);
+          mixerRef.current = null;
         }
 
         const step = steps[index];
-
-        // Load 3D model
         const loader = new GLTFLoader();
+
         loader.load(
           step.model,
           (gltf) => {
@@ -1177,34 +1185,41 @@ const GreenLeaveEvents= () => {
             model.position.set(0, -0.3, -1);
             model.scale.set(0.4, 0.4, 0.4);
             scene.add(model);
+            modelRef.current = model;
 
-            mixerRef.current = new THREE.AnimationMixer(model);
+            // Animation
             if (gltf.animations.length > 0) {
+              mixerRef.current = new THREE.AnimationMixer(model);
               const action = mixerRef.current.clipAction(gltf.animations[0]);
+              action.reset();
               action.play();
+
+              // Proceed to next step when animation finishes
+              action.clampWhenFinished = true;
+              action.loop = THREE.LoopOnce;
+              mixerRef.current.addEventListener("finished", () => {
+                if (index < steps.length - 1) {
+                  setCurrentStep(index + 1);
+                  showStep(index + 1);
+                }
+              });
+            } else {
+              // If no animation, fallback to timeout
+              setTimeout(() => {
+                if (index < steps.length - 1) {
+                  setCurrentStep(index + 1);
+                  showStep(index + 1);
+                }
+              }, 5000);
             }
           },
           undefined,
           (error) => console.error("Error loading model:", error)
         );
-
-        // Schedule next step
-        if (index < steps.length - 1) {
-          setTimeout(() => {
-            setCurrentStep(index + 1);
-            showStep(index + 1);
-          }, 5000); // 5 seconds per step
-        }
       }
     };
 
     init();
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      if (mountRef.current) mountRef.current.innerHTML = "";
-      window.removeEventListener("resize", () => {});
-    };
   }, []);
 
   return (
@@ -1212,8 +1227,8 @@ const GreenLeaveEvents= () => {
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="w-full h-full" />
 
-      {/* Tailwind overlay instructions */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white p-3 rounded-lg z-50 text-center">
+      {/* Overlay instructions */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white p-3 rounded-lg z-50 text-center pointer-events-none">
         {steps[currentStep]?.text || "Loading..."}
       </div>
     </div>
@@ -1221,4 +1236,3 @@ const GreenLeaveEvents= () => {
 };
 
 export default GreenLeaveEvents;
-
