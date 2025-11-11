@@ -1312,7 +1312,7 @@ const GreenLeaveEvents = () => {
     const init = () => {
       // Scene
       scene = new THREE.Scene();
-      scene.background = null
+      
 
       // Camera
       camera = new THREE.PerspectiveCamera(
@@ -1428,7 +1428,7 @@ const GreenLeaveEvents = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-black">
+    <div className="relative w-screen h-screen overflow-hidden">
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
