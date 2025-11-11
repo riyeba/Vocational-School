@@ -1097,7 +1097,7 @@ const steps = [
   },
   {
     text: "Step 2: Rub palms together",
-    model: "https://media.sketchfab.com/models/08665c5c84734e7bb1541849bfcd9f6a/fallbacks/b9887f5659c24a54b02b24bf86a91f72/85fec710acef4c049db57e6a0c179a68.jpeg",
+    model: "/two_hands.glb",
   },
   {
     text: "Step 3: Scrub between fingers",
