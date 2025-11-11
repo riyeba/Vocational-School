@@ -1475,9 +1475,13 @@ import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const steps = [
-  { text: "Step 1: Wet your hands", model: "/image/two_hands.glb" },
-  { text: "Step 2: Rub palms together", model: "/image/twee_handen.glb" },
-  { text: "Step 3: Scrub between fingers", model: "/image/two_hands.glb" }, 
+  { text: "Step 1: Wet your hands and apply soap", model: "/image/two_hands.glb" },
+  { text: "Step 2: Rub palms together in circular motions", model: "/image/two_hands.glb" },
+  { text: "Step 3: Rub the back of each hand", model: "/image/two_hands.glb" }, 
+  { text: "Step 4: Interlace fingers and clean between them", model: "/image/two_hands.glb" },
+  { text: "Step 5: Clean thumbs by rotating in opposite palm", model: "/image/two_hands.glb" },
+  { text: "Step 6: Rub fingertips on opposite palm", model: "/image/two_hands.glb" }, 
+    { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
 ];
 
 const GreenLeaveEvents = () => {
@@ -1645,7 +1649,7 @@ const GreenLeaveEvents = () => {
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
             <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
-            <p className="text-sm">
+            <p className="text-sm text-blue-600">
               Click &quot;Start AR&quot; to begin the interactive hand washing guide
             </p>
           </div>
