@@ -1287,6 +1287,215 @@
 // export default GreenLeaveEvents;
 
 
+// import React, { useEffect, useRef, useState } from "react";
+// import * as THREE from "three";
+// import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
+// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+// const steps = [
+//   { text: "Step 1: Wet your hands", model: "/image/two_hands.glb" },
+//   { text: "Step 2: Rub palms together", model: "/image/two_hands.glb" },
+//   { text: "Step 3: Scrub between fingers", model: "/image/two_hands.glb" }, 
+// ];
+
+// const GreenLeaveEvents = () => {
+//   const mountRef = useRef(null);
+//   const overlayRef = useRef(null);
+//   const mixerRef = useRef(null);
+//   const clock = useRef(new THREE.Clock());
+//   const [currentStep, setCurrentStep] = useState(0);
+//   const [isARActive, setIsARActive] = useState(false);
+
+//   useEffect(() => {
+//     let scene, camera, renderer;
+
+//     const init = () => {
+//       // Scene
+//       scene = new THREE.Scene();
+      
+
+//       // Camera
+//       camera = new THREE.PerspectiveCamera(
+//         70,
+//         window.innerWidth / window.innerHeight,
+//         0.01,
+//         20
+//       );
+
+//       // Renderer
+//       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+//       renderer.setSize(window.innerWidth, window.innerHeight);
+//       renderer.xr.enabled = true;
+
+//       renderer.setClearColor(0x000000, 0); // Makes background transparent
+//       scene.background = null; //
+//       renderer.domElement.style.position = "absolute";
+//       renderer.domElement.style.top = "0";
+//       renderer.domElement.style.left = "0";
+//       mountRef.current.appendChild(renderer.domElement);
+
+//       // AR Button
+//       const arButton = ARButton.createButton(renderer, {
+//         optionalFeatures: ["local-floor", "dom-overlay"],
+//         domOverlay: { root: document.body },
+//       });
+//       arButton.style.position = "absolute";
+//       arButton.style.bottom = "20px";
+//       arButton.style.left = "50%";
+//       arButton.style.transform = "translateX(-50%)";
+//       arButton.style.zIndex = "100";
+//       mountRef.current.appendChild(arButton);
+
+//       // Light
+//       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+//       scene.add(light);
+
+//       const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+//       dirLight.position.set(0, 5, 5);
+//       scene.add(dirLight);
+
+//       // AR session start
+//       renderer.xr.addEventListener("sessionstart", () => {
+//         console.log("AR Session Started!");
+//         setIsARActive(true);
+//         setCurrentStep(0);
+//         showStep(0);
+//       });
+
+//       // AR session end
+//       renderer.xr.addEventListener("sessionend", () => {
+//         setIsARActive(false);
+//         // Remove all objects except lights
+//         scene.children
+//           .filter((child) => !(child instanceof THREE.Light))
+//           .forEach((child) => scene.remove(child));
+//       });
+
+//       // Animation loop
+//       renderer.setAnimationLoop(() => {
+//         const delta = clock.current.getDelta();
+//         if (mixerRef.current) mixerRef.current.update(delta);
+//         renderer.render(scene, camera);
+//       });
+
+//       // Handle resize
+//       const handleResize = () => {
+//         camera.aspect = window.innerWidth / window.innerHeight;
+//         camera.updateProjectionMatrix();
+//         renderer.setSize(window.innerWidth, window.innerHeight);
+//       };
+//       window.addEventListener("resize", handleResize);
+
+//       // Show each step
+//       function showStep(index) {
+//         setCurrentStep(index); // Update overlay
+
+//         // Remove previous models
+//         scene.children
+//           .filter((child) => !(child instanceof THREE.Light))
+//           .forEach((child) => scene.remove(child));
+
+//         const step = steps[index];
+//         // const loader = new GLTFLoader();
+//         // loader.load(
+//         //   step.model,
+//         //   (gltf) => {
+//         //     const model = gltf.scene;
+//         //     model.position.set(0, -0.2, -0.5); // In front of camera
+//         //     model.scale.set(0.5, 0.5, 0.5);
+//         //     scene.add(model);
+
+//         //     mixerRef.current = new THREE.AnimationMixer(model);
+//         //     if (gltf.animations.length > 0) {
+//         //       mixerRef.current.clipAction(gltf.animations[0]).play();
+//         //     }
+//         //   },
+//         //   undefined,
+//         //   (error) => console.error("Error loading model:", error)
+//         // );
+//        const loader = new GLTFLoader();
+// loader.load(
+//   step.model,
+//   (gltf) => {
+//     const model = gltf.scene;
+
+//     // Adjust scale for visibility
+//     model.scale.set(0.4, 0.4, 0.4);
+
+//     // 👇 Attach the model directly to the camera
+//     camera.add(model);
+//     model.position.set(0, -0.2, -0.5); // slightly below and in front of camera
+
+//     // 👇 Ensure camera is in the scene
+//     scene.add(camera);
+
+//     // Optional: play any animations
+//     mixerRef.current = new THREE.AnimationMixer(model);
+//     if (gltf.animations.length > 0) {
+//       mixerRef.current.clipAction(gltf.animations[0]).play();
+//     }
+
+//     console.log("✅ Model added and attached to camera:", step.model);
+//   },
+//   (xhr) => console.log(`Loading progress: ${(xhr.loaded / xhr.total) * 100}%`),
+//   (error) => console.error("❌ Error loading model:", error)
+// );
+
+//         // Next step after 5 seconds
+//         if (index < steps.length - 1) {
+//           setTimeout(() => showStep(index + 1), 5000);
+//         }
+//       }
+
+//       // Cleanup
+//       return () => {
+//         renderer.setAnimationLoop(null);
+//         window.removeEventListener("resize", handleResize);
+//       };
+//     };
+
+//     const cleanup = init();
+//     return () => {
+//       if (cleanup) cleanup();
+//       if (mountRef.current) mountRef.current.innerHTML = "";
+//     };
+//   }, []);
+
+//   return (
+//     <div className="relative w-screen h-screen overflow-hidden">
+//       {/* Three.js AR Canvas */}
+//       <div ref={mountRef} className="absolute inset-0" />
+
+//       {/* Overlay */}
+//       {isARActive && (
+//         <div
+//           ref={overlayRef}
+//           className="fixed top-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-4 rounded-2xl text-center pointer-events-none max-w-md shadow-2xl border-4 border-white"
+//           style={{ zIndex: 9999 }}
+//         >
+//           <p className="text-2xl font-bold">
+//             {steps[currentStep]?.text || "Loading..."}
+//           </p>
+//         </div>
+//       )}
+
+//       {/* Instructions before AR starts */}
+//       {!isARActive && (
+//         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+//           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
+//             <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
+//             <p className="text-sm">
+//               Click &quot;Start AR&quot; to begin the interactive hand washing guide
+//             </p>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default GreenLeaveEvents;
+
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
@@ -1295,7 +1504,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 const steps = [
   { text: "Step 1: Wet your hands", model: "/image/two_hands.glb" },
   { text: "Step 2: Rub palms together", model: "/image/two_hands.glb" },
-  { text: "Step 3: Scrub between fingers", model: "/image/two_hands.glb" }, 
+  { text: "Step 3: Scrub between fingers", model: "/image/two_hands.glb" },
 ];
 
 const GreenLeaveEvents = () => {
@@ -1312,7 +1521,6 @@ const GreenLeaveEvents = () => {
     const init = () => {
       // Scene
       scene = new THREE.Scene();
-      
 
       // Camera
       camera = new THREE.PerspectiveCamera(
@@ -1321,14 +1529,18 @@ const GreenLeaveEvents = () => {
         0.01,
         20
       );
+      scene.add(camera);
 
       // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
 
-      renderer.setClearColor(0x000000, 0); // Makes background transparent
-      scene.background = null; //
+      // Transparent background (camera feed visible)
+      renderer.setClearColor(0x000000, 0);
+      scene.background = null;
+
+      // Add renderer to DOM
       renderer.domElement.style.position = "absolute";
       renderer.domElement.style.top = "0";
       renderer.domElement.style.left = "0";
@@ -1346,17 +1558,17 @@ const GreenLeaveEvents = () => {
       arButton.style.zIndex = "100";
       mountRef.current.appendChild(arButton);
 
-      // Light
-      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      scene.add(light);
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
 
       const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-      dirLight.position.set(0, 5, 5);
+      dirLight.position.set(0, 2, 2);
       scene.add(dirLight);
 
       // AR session start
       renderer.xr.addEventListener("sessionstart", () => {
-        console.log("AR Session Started!");
+        console.log("✅ AR Session Started!");
         setIsARActive(true);
         setCurrentStep(0);
         showStep(0);
@@ -1364,8 +1576,9 @@ const GreenLeaveEvents = () => {
 
       // AR session end
       renderer.xr.addEventListener("sessionend", () => {
+        console.log("🔚 AR Session Ended!");
         setIsARActive(false);
-        // Remove all objects except lights
+        // Clean up non-light objects
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
           .forEach((child) => scene.remove(child));
@@ -1378,7 +1591,7 @@ const GreenLeaveEvents = () => {
         renderer.render(scene, camera);
       });
 
-      // Handle resize
+      // Resize handling
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1386,62 +1599,46 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
-      // Show each step
+      // Step display function
       function showStep(index) {
-        setCurrentStep(index); // Update overlay
+        setCurrentStep(index);
 
-        // Remove previous models
+        // Remove old models (keep lights)
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
           .forEach((child) => scene.remove(child));
 
         const step = steps[index];
-        // const loader = new GLTFLoader();
-        // loader.load(
-        //   step.model,
-        //   (gltf) => {
-        //     const model = gltf.scene;
-        //     model.position.set(0, -0.2, -0.5); // In front of camera
-        //     model.scale.set(0.5, 0.5, 0.5);
-        //     scene.add(model);
+        const loader = new GLTFLoader();
 
-        //     mixerRef.current = new THREE.AnimationMixer(model);
-        //     if (gltf.animations.length > 0) {
-        //       mixerRef.current.clipAction(gltf.animations[0]).play();
-        //     }
-        //   },
-        //   undefined,
-        //   (error) => console.error("Error loading model:", error)
-        // );
-       const loader = new GLTFLoader();
-loader.load(
-  step.model,
-  (gltf) => {
-    const model = gltf.scene;
+        loader.load(
+          step.model,
+          (gltf) => {
+            const model = gltf.scene;
 
-    // Adjust scale for visibility
-    model.scale.set(0.4, 0.4, 0.4);
+            // Adjust scale for visibility
+            model.scale.set(0.4, 0.4, 0.4);
 
-    // 👇 Attach the model directly to the camera
-    camera.add(model);
-    model.position.set(0, -0.2, -0.5); // slightly below and in front of camera
+            // Attach to camera (always stays in front)
+            camera.add(model);
+            model.position.set(0, -0.2, -0.5);
 
-    // 👇 Ensure camera is in the scene
-    scene.add(camera);
+            // Ensure camera is part of scene
+            scene.add(camera);
 
-    // Optional: play any animations
-    mixerRef.current = new THREE.AnimationMixer(model);
-    if (gltf.animations.length > 0) {
-      mixerRef.current.clipAction(gltf.animations[0]).play();
-    }
+            // Optional animation
+            mixerRef.current = new THREE.AnimationMixer(model);
+            if (gltf.animations.length > 0) {
+              mixerRef.current.clipAction(gltf.animations[0]).play();
+            }
 
-    console.log("✅ Model added and attached to camera:", step.model);
-  },
-  (xhr) => console.log(`Loading progress: ${(xhr.loaded / xhr.total) * 100}%`),
-  (error) => console.error("❌ Error loading model:", error)
-);
+            console.log("✅ Model loaded and attached:", step.model);
+          },
+          (xhr) => console.log(`Loading progress: ${(xhr.loaded / xhr.total) * 100}%`),
+          (error) => console.error("❌ Error loading model:", error)
+        );
 
-        // Next step after 5 seconds
+        // Move to next step after 5 seconds
         if (index < steps.length - 1) {
           setTimeout(() => showStep(index + 1), 5000);
         }
@@ -1463,10 +1660,10 @@ loader.load(
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      {/* Three.js AR Canvas */}
+      {/* AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Overlay */}
+      {/* Step Overlay */}
       {isARActive && (
         <div
           ref={overlayRef}
@@ -1479,7 +1676,7 @@ loader.load(
         </div>
       )}
 
-      {/* Instructions before AR starts */}
+      {/* Before AR starts */}
       {!isARActive && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
