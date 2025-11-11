@@ -1586,7 +1586,7 @@ const GreenLeaveEvents = () => {
             
             // Position model further away and at eye level
             model.position.set(0, 0, -1.5); // Moved further back
-            model.scale.set(0.3, 0.3, 0.3); // Slightly smaller
+            model.scale.set(0.1, 0.1, 0.1); // Slightly smaller
             
             // Rotate model to face camera
             model.rotation.y = Math.PI;
