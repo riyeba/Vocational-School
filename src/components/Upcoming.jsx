@@ -1394,8 +1394,8 @@ const GreenLeaveEvents = () => {
           step.model,
           (gltf) => {
             const model = gltf.scene;
-            model.position.set(0, -0.2, -0.6); // In front of camera
-            model.scale.set(0.3, 0.3, 0.3);
+            model.position.set(0, 0, -0.2); // In front of camera
+            model.scale.set(0.1, 0.1, 0.1);
             scene.add(model);
 
             mixerRef.current = new THREE.AnimationMixer(model);
