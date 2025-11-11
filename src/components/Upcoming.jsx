@@ -1468,6 +1468,7 @@
 // };
 
 // export default GreenLeaveEvents;
+
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
@@ -1480,7 +1481,7 @@ const steps = [
   { text: "Step 4: Interlace fingers and clean between them", model: "/image/two_hands.glb" },
   { text: "Step 5: Clean thumbs by rotating in opposite palm", model: "/image/two_hands.glb" },
   { text: "Step 6: Rub fingertips on opposite palm", model: "/image/two_hands.glb" }, 
-  { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
+    { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
 ];
 
 const GreenLeaveEvents = () => {
@@ -1490,25 +1491,14 @@ const GreenLeaveEvents = () => {
   const clock = useRef(new THREE.Clock());
   const [currentStep, setCurrentStep] = useState(0);
   const [isARActive, setIsARActive] = useState(false);
-  const [isPlaced, setIsPlaced] = useState(false);
-  
-  // Refs for AR functionality
-  const sceneRef = useRef(null);
-  const cameraRef = useRef(null);
-  const rendererRef = useRef(null);
-  const reticleRef = useRef(null);
-  const hitTestSourceRef = useRef(null);
-  const hitTestSourceRequestedRef = useRef(false);
-  const modelRef = useRef(null);
-  const controllerRef = useRef(null);
 
   useEffect(() => {
-    let scene, camera, renderer, reticle, controller;
+    let scene, camera, renderer;
 
     const init = () => {
       // Scene
       scene = new THREE.Scene();
-      sceneRef.current = scene;
+      
 
       // Camera
       camera = new THREE.PerspectiveCamera(
@@ -1517,23 +1507,21 @@ const GreenLeaveEvents = () => {
         0.01,
         20
       );
-      cameraRef.current = camera;
 
       // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
-      renderer.setClearColor(0x000000, 0);
-      scene.background = null;
+
+      renderer.setClearColor(0x000000, 0); // Makes background transparent
+      scene.background = null; //
       renderer.domElement.style.position = "absolute";
       renderer.domElement.style.top = "0";
       renderer.domElement.style.left = "0";
-      rendererRef.current = renderer;
       mountRef.current.appendChild(renderer.domElement);
 
       // AR Button
       const arButton = ARButton.createButton(renderer, {
-        requiredFeatures: ["hit-test"],
         optionalFeatures: ["local-floor", "dom-overlay"],
         domOverlay: { root: document.body },
       });
@@ -1544,7 +1532,7 @@ const GreenLeaveEvents = () => {
       arButton.style.zIndex = "100";
       mountRef.current.appendChild(arButton);
 
-      // Lights
+      // Light
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(light);
 
@@ -1552,84 +1540,27 @@ const GreenLeaveEvents = () => {
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // Create reticle (placement indicator)
-      const reticleGeometry = new THREE.RingGeometry(0.15, 0.2, 32).rotateX(-Math.PI / 2);
-      const reticleMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      reticle = new THREE.Mesh(reticleGeometry, reticleMaterial);
-      reticle.matrixAutoUpdate = false;
-      reticle.visible = false;
-      scene.add(reticle);
-      reticleRef.current = reticle;
-
-      // Controller for tap detection
-      controller = renderer.xr.getController(0);
-      controller.addEventListener("select", onSelect);
-      scene.add(controller);
-      controllerRef.current = controller;
-
       // AR session start
       renderer.xr.addEventListener("sessionstart", () => {
         console.log("AR Session Started!");
         setIsARActive(true);
-        setIsPlaced(false);
         setCurrentStep(0);
-        hitTestSourceRequestedRef.current = false;
+        showStep(0);
       });
 
       // AR session end
       renderer.xr.addEventListener("sessionend", () => {
         setIsARActive(false);
-        setIsPlaced(false);
-        hitTestSourceRequestedRef.current = false;
-        hitTestSourceRef.current = null;
-        
         // Remove all objects except lights
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
-          .forEach((child) => {
-            if (child !== reticle && child !== controller) {
-              scene.remove(child);
-            }
-          });
-        
-        reticle.visible = false;
+          .forEach((child) => scene.remove(child));
       });
 
       // Animation loop
-      renderer.setAnimationLoop((timestamp, frame) => {
+      renderer.setAnimationLoop(() => {
         const delta = clock.current.getDelta();
         if (mixerRef.current) mixerRef.current.update(delta);
-
-        if (frame) {
-          const referenceSpace = renderer.xr.getReferenceSpace();
-          const session = renderer.xr.getSession();
-
-          // Request hit test source
-          if (!hitTestSourceRequestedRef.current) {
-            session.requestReferenceSpace("viewer").then((referenceSpace) => {
-              session.requestHitTestSource({ space: referenceSpace }).then((source) => {
-                hitTestSourceRef.current = source;
-              });
-            });
-            hitTestSourceRequestedRef.current = true;
-          }
-
-          // Perform hit test
-          if (hitTestSourceRef.current && !isPlaced) {
-            const hitTestResults = frame.getHitTestResults(hitTestSourceRef.current);
-            
-            if (hitTestResults.length > 0) {
-              const hit = hitTestResults[0];
-              const hitPose = hit.getPose(referenceSpace);
-              
-              reticle.visible = true;
-              reticle.matrix.fromArray(hitPose.transform.matrix);
-            } else {
-              reticle.visible = false;
-            }
-          }
-        }
-
         renderer.render(scene, camera);
       });
 
@@ -1641,105 +1572,67 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
+      // Show each step
+      function showStep(index) {
+        setCurrentStep(index); // Update overlay
+
+        // Remove previous models
+        scene.children
+          .filter((child) => !(child instanceof THREE.Light))
+          .forEach((child) => scene.remove(child));
+
+        const step = steps[index];
+        const loader = new GLTFLoader();
+        loader.load(
+          step.model,
+          (gltf) => {
+            const model = gltf.scene;
+            
+            // Position model further away and at eye level
+            model.position.set(0, 0, -1.5); // Moved further back
+            model.scale.set(0.2, 0.2, 0.2); // Slightly smaller
+            
+            // Rotate model to face camera
+            model.rotation.y = Math.PI;
+            
+            scene.add(model);
+
+            mixerRef.current = new THREE.AnimationMixer(model);
+            if (gltf.animations.length > 0) {
+              mixerRef.current.clipAction(gltf.animations[0]).play();
+            }
+          },
+          undefined,
+          (error) => console.error("Error loading model:", error)
+        );
+
+        // Next step after 5 seconds
+        if (index < steps.length - 1) {
+          setTimeout(() => showStep(index + 1), 5000);
+        }
+      }
+
       // Cleanup
       return () => {
         renderer.setAnimationLoop(null);
         window.removeEventListener("resize", handleResize);
-        if (controller) {
-          controller.removeEventListener("select", onSelect);
-        }
       };
     };
-
-    // Handle tap to place
-    function onSelect() {
-      if (reticleRef.current && reticleRef.current.visible && !isPlaced) {
-        setIsPlaced(true);
-        reticleRef.current.visible = false;
-        
-        // Get reticle position and rotation
-        const reticleMatrix = new THREE.Matrix4();
-        reticleMatrix.copy(reticleRef.current.matrix);
-        
-        // Start the tutorial from step 0
-        showStep(0, reticleMatrix);
-      }
-    }
-
-    // Show each step
-    function showStep(index, placementMatrix) {
-      setCurrentStep(index);
-
-      // Remove previous model
-      if (modelRef.current) {
-        sceneRef.current.remove(modelRef.current);
-        modelRef.current = null;
-      }
-
-      const step = steps[index];
-      const loader = new GLTFLoader();
-      
-      loader.load(
-        step.model,
-        (gltf) => {
-          const model = gltf.scene;
-          
-          // Extract position from placement matrix
-          const position = new THREE.Vector3();
-          const quaternion = new THREE.Quaternion();
-          const scale = new THREE.Vector3();
-          placementMatrix.decompose(position, quaternion, scale);
-          
-          // Set model position slightly above the surface
-          model.position.copy(position);
-          model.position.y += 0.5; // Lift up 50cm above surface
-          
-          // Scale the model appropriately
-          model.scale.set(0.3, 0.3, 0.3);
-          
-          // Rotate to face the camera
-          const cameraPosition = cameraRef.current.position;
-          const direction = new THREE.Vector3();
-          direction.subVectors(cameraPosition, model.position);
-          direction.y = 0; // Keep rotation only on horizontal plane
-          direction.normalize();
-          
-          const angle = Math.atan2(direction.x, direction.z);
-          model.rotation.y = angle;
-          
-          sceneRef.current.add(model);
-          modelRef.current = model;
-
-          // Setup animation
-          mixerRef.current = new THREE.AnimationMixer(model);
-          if (gltf.animations.length > 0) {
-            mixerRef.current.clipAction(gltf.animations[0]).play();
-          }
-        },
-        undefined,
-        (error) => console.error("Error loading model:", error)
-      );
-
-      // Auto-advance to next step after 5 seconds
-      if (index < steps.length - 1) {
-        setTimeout(() => showStep(index + 1, placementMatrix), 5000);
-      }
-    }
 
     const cleanup = init();
     return () => {
       if (cleanup) cleanup();
       if (mountRef.current) mountRef.current.innerHTML = "";
     };
-  }, [isPlaced]);
+  }, []);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Step Overlay - shown after placement */}
-      {isARActive && isPlaced && (
+      {/* Overlay */}
+      {isARActive && (
         <div
           ref={overlayRef}
           className="fixed top-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-4 rounded-2xl text-center pointer-events-none max-w-md shadow-2xl border-4 border-white"
@@ -1748,33 +1641,16 @@ const GreenLeaveEvents = () => {
           <p className="text-2xl font-bold">
             {steps[currentStep]?.text || "Loading..."}
           </p>
-          <p className="text-sm mt-2 opacity-90">
-            Step {currentStep + 1} of {steps.length}
-          </p>
         </div>
       )}
 
-      {/* Placement Instructions - shown before placement */}
-      {isARActive && !isPlaced && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-xl text-center pointer-events-none max-w-sm shadow-xl animate-pulse">
-          <p className="text-lg font-bold">
-            👆 Point at a surface and tap to place
-          </p>
-        </div>
-      )}
-
-      {/* Initial Instructions - shown before AR starts */}
+      {/* Instructions before AR starts */}
       {!isARActive && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-white bg-opacity-95 text-gray-800 px-8 py-6 rounded-xl text-center max-w-md mx-4 shadow-2xl">
-            <h2 className="text-2xl font-bold mb-3 text-blue-600">
-              🧼 Hand Washing AR Tutorial
-            </h2>
-            <p className="text-base mb-2">
-              Learn proper hand washing technique in augmented reality
-            </p>
-            <p className="text-sm text-gray-600">
-              Click "Start AR" below, then tap a surface to begin
+          <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
+            <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
+            <p className="text-sm text-blue-600">
+              Click &quot;Start AR&quot; to begin the interactive hand washing guide
             </p>
           </div>
         </div>
