@@ -1476,7 +1476,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const steps = [
   { text: "Step 1: Wet your hands", model: "/image/two_hands.glb" },
-  { text: "Step 2: Rub palms together", model: "/image/two_hands.glb" },
+  { text: "Step 2: Rub palms together", model: "/image/twee_handen.glb" },
   { text: "Step 3: Scrub between fingers", model: "/image/two_hands.glb" }, 
 ];
 
