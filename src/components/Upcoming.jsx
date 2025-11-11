@@ -1347,6 +1347,10 @@ const GreenLeaveEvents = () => {
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(light);
 
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(0, 5, 5);
+      scene.add(dirLight);
+
       // AR session start
       renderer.xr.addEventListener("sessionstart", () => {
         console.log("AR Session Started!");
