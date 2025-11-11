@@ -1396,23 +1396,50 @@ const GreenLeaveEvents = () => {
           .forEach((child) => scene.remove(child));
 
         const step = steps[index];
-        const loader = new GLTFLoader();
-        loader.load(
-          step.model,
-          (gltf) => {
-            const model = gltf.scene;
-            model.position.set(0, -0.2, -0.5); // In front of camera
-            model.scale.set(0.5, 0.5, 0.5);
-            scene.add(model);
+        // const loader = new GLTFLoader();
+        // loader.load(
+        //   step.model,
+        //   (gltf) => {
+        //     const model = gltf.scene;
+        //     model.position.set(0, -0.2, -0.5); // In front of camera
+        //     model.scale.set(0.5, 0.5, 0.5);
+        //     scene.add(model);
 
-            mixerRef.current = new THREE.AnimationMixer(model);
-            if (gltf.animations.length > 0) {
-              mixerRef.current.clipAction(gltf.animations[0]).play();
-            }
-          },
-          undefined,
-          (error) => console.error("Error loading model:", error)
-        );
+        //     mixerRef.current = new THREE.AnimationMixer(model);
+        //     if (gltf.animations.length > 0) {
+        //       mixerRef.current.clipAction(gltf.animations[0]).play();
+        //     }
+        //   },
+        //   undefined,
+        //   (error) => console.error("Error loading model:", error)
+        // );
+       const loader = new GLTFLoader();
+loader.load(
+  step.model,
+  (gltf) => {
+    const model = gltf.scene;
+
+    // Adjust scale for visibility
+    model.scale.set(0.4, 0.4, 0.4);
+
+    // 👇 Attach the model directly to the camera
+    camera.add(model);
+    model.position.set(0, -0.2, -0.5); // slightly below and in front of camera
+
+    // 👇 Ensure camera is in the scene
+    scene.add(camera);
+
+    // Optional: play any animations
+    mixerRef.current = new THREE.AnimationMixer(model);
+    if (gltf.animations.length > 0) {
+      mixerRef.current.clipAction(gltf.animations[0]).play();
+    }
+
+    console.log("✅ Model added and attached to camera:", step.model);
+  },
+  (xhr) => console.log(`Loading progress: ${(xhr.loaded / xhr.total) * 100}%`),
+  (error) => console.error("❌ Error loading model:", error)
+);
 
         // Next step after 5 seconds
         if (index < steps.length - 1) {
