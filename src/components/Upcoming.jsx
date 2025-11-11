@@ -1293,18 +1293,9 @@ import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const steps = [
-  {
-    text: "Step 1: Wet your hands",
-    model: "/two_hands.glb",
-  },
-  {
-    text: "Step 2: Rub palms together",
-    model: "/two_hands.glb",
-  },
-  {
-    text: "Step 3: Scrub between fingers",
-    model: "/two_hands.glb",
-  },
+  { text: "Step 1: Wet your hands", model: "/two_hands.glb" },
+  { text: "Step 2: Rub palms together", model: "/two_hands.glb" },
+  { text: "Step 3: Scrub between fingers", model: "/two_hands.glb" },
 ];
 
 const GreenLeaveEvents = () => {
@@ -1314,17 +1305,15 @@ const GreenLeaveEvents = () => {
   const clock = useRef(new THREE.Clock());
   const [currentStep, setCurrentStep] = useState(0);
   const [isARActive, setIsARActive] = useState(false);
-  const stepIndexRef = useRef(0);
 
   useEffect(() => {
     let scene, camera, renderer;
-    let animationId;
 
     const init = () => {
-      // 1️⃣ Scene
+      // Scene
       scene = new THREE.Scene();
 
-      // 2️⃣ Camera
+      // Camera
       camera = new THREE.PerspectiveCamera(
         70,
         window.innerWidth / window.innerHeight,
@@ -1332,63 +1321,56 @@ const GreenLeaveEvents = () => {
         20
       );
 
-      // 3️⃣ Renderer
+      // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
-      
-      // Set renderer canvas style to ensure overlay works
-      renderer.domElement.style.position = 'absolute';
-      renderer.domElement.style.top = '0';
-      renderer.domElement.style.left = '0';
-      
+      renderer.domElement.style.position = "absolute";
+      renderer.domElement.style.top = "0";
+      renderer.domElement.style.left = "0";
       mountRef.current.appendChild(renderer.domElement);
-      
-      const arButton = ARButton.createButton(renderer, { 
-        requiredFeatures: ["hit-test"] 
+
+      // AR Button
+      const arButton = ARButton.createButton(renderer, {
+        optionalFeatures: ["local-floor", "dom-overlay"],
+        domOverlay: { root: document.body },
       });
-      arButton.style.position = 'absolute';
-      arButton.style.bottom = '20px';
-      arButton.style.left = '50%';
-      arButton.style.transform = 'translateX(-50%)';
-      arButton.style.zIndex = '100';
-      
+      arButton.style.position = "absolute";
+      arButton.style.bottom = "20px";
+      arButton.style.left = "50%";
+      arButton.style.transform = "translateX(-50%)";
+      arButton.style.zIndex = "100";
       mountRef.current.appendChild(arButton);
 
-      // 4️⃣ Light
+      // Light
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(light);
 
-      // 5️⃣ Detect when AR session starts
-      renderer.xr.addEventListener('sessionstart', () => {
-        console.log('AR Session Started!');
+      // AR session start
+      renderer.xr.addEventListener("sessionstart", () => {
+        console.log("AR Session Started!");
         setIsARActive(true);
-        stepIndexRef.current = 0;
         setCurrentStep(0);
         showStep(0);
       });
 
-      // 6️⃣ Detect when AR session ends
-      renderer.xr.addEventListener('sessionend', () => {
+      // AR session end
+      renderer.xr.addEventListener("sessionend", () => {
         setIsARActive(false);
-        // Clear the scene
-        const objectsToRemove = [];
-        scene.children.forEach(child => {
-          if (!(child instanceof THREE.Light)) {
-            objectsToRemove.push(child);
-          }
-        });
-        objectsToRemove.forEach(obj => scene.remove(obj));
+        // Remove all objects except lights
+        scene.children
+          .filter((child) => !(child instanceof THREE.Light))
+          .forEach((child) => scene.remove(child));
       });
 
-      // 7️⃣ Animation loop
+      // Animation loop
       renderer.setAnimationLoop(() => {
         const delta = clock.current.getDelta();
         if (mixerRef.current) mixerRef.current.update(delta);
         renderer.render(scene, camera);
       });
 
-      // 8️⃣ Handle resize
+      // Handle resize
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1396,62 +1378,41 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
-      // 9️⃣ Show step function
+      // Show each step
       function showStep(index) {
-        // Clear old objects except lights
-        const objectsToRemove = [];
-        scene.children.forEach(child => {
-          if (!(child instanceof THREE.Light)) {
-            objectsToRemove.push(child);
-          }
-        });
-        objectsToRemove.forEach(obj => scene.remove(obj));
+        setCurrentStep(index); // Update overlay
+
+        // Remove previous models
+        scene.children
+          .filter((child) => !(child instanceof THREE.Light))
+          .forEach((child) => scene.remove(child));
 
         const step = steps[index];
-
-        // Load 3D model
         const loader = new GLTFLoader();
         loader.load(
           step.model,
           (gltf) => {
-            console.log('Model loaded successfully:', step.model);
             const model = gltf.scene;
-            
-            // Position model in front of camera (attached to camera)
-            const cameraGroup = new THREE.Group();
-            cameraGroup.position.set(0, -0.2, -0.6); // Closer and slightly below eye level
-            cameraGroup.scale.set(0.3, 0.3, 0.3);
-            cameraGroup.add(model);
-            
-            // Add to camera so it follows where you look
-            camera.add(cameraGroup);
-            scene.add(camera);
+            model.position.set(0, -0.2, -0.6); // In front of camera
+            model.scale.set(0.3, 0.3, 0.3);
+            scene.add(model);
 
             mixerRef.current = new THREE.AnimationMixer(model);
             if (gltf.animations.length > 0) {
-              const action = mixerRef.current.clipAction(gltf.animations[0]);
-              action.play();
+              mixerRef.current.clipAction(gltf.animations[0]).play();
             }
           },
           undefined,
-          (error) => {
-            console.error("Error loading model:", error);
-            console.error("Attempted path:", step.model);
-          }
+          (error) => console.error("Error loading model:", error)
         );
 
-        // Schedule next step
+        // Next step after 5 seconds
         if (index < steps.length - 1) {
-          setTimeout(() => {
-            const nextStep = index + 1;
-            stepIndexRef.current = nextStep;
-            setCurrentStep(nextStep);
-            showStep(nextStep);
-          }, 5000); // 5 seconds per step
+          setTimeout(() => showStep(index + 1), 5000);
         }
       }
 
-      // Cleanup function
+      // Cleanup
       return () => {
         renderer.setAnimationLoop(null);
         window.removeEventListener("resize", handleResize);
@@ -1459,12 +1420,9 @@ const GreenLeaveEvents = () => {
     };
 
     const cleanup = init();
-
     return () => {
       if (cleanup) cleanup();
-      if (mountRef.current) {
-        mountRef.current.innerHTML = "";
-      }
+      if (mountRef.current) mountRef.current.innerHTML = "";
     };
   }, []);
 
@@ -1473,9 +1431,9 @@ const GreenLeaveEvents = () => {
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Show overlay only when AR is active */}
+      {/* Overlay */}
       {isARActive && (
-        <div 
+        <div
           ref={overlayRef}
           className="fixed top-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-4 rounded-2xl text-center pointer-events-none max-w-md shadow-2xl border-4 border-white"
           style={{ zIndex: 9999 }}
@@ -1491,7 +1449,9 @@ const GreenLeaveEvents = () => {
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
             <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
-            <p className="text-sm">Click &quot;Start AR&quot; to begin the interactive hand washing guide</p>
+            <p className="text-sm">
+              Click &quot;Start AR&quot; to begin the interactive hand washing guide
+            </p>
           </div>
         </div>
       )}
