@@ -1432,7 +1432,7 @@ const GreenLeaveEvents = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div className="relative w-screen h-screen overflow-hidden bg-black">
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
