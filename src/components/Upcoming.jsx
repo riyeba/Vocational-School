@@ -1586,8 +1586,12 @@ const GreenLeaveEvents = () => {
             
             // Position model further away and at eye level
             model.position.set(0, 0, -1.5); // Moved further back
-            model.scale.set(0.1, 0.1, 0.1); // Slightly smaller
-            
+            // model.scale.set(0.1, 0.1, 0.1); // Slightly smaller
+            if (step.model.includes("twee_handen.glb")) {
+      model.scale.set(0.05, 0.05, 0.05); // smaller for Step 2
+    } else {
+      model.scale.set(0.2, 0.2, 0.2); // default size for others
+    }
             // Rotate model to face camera
             model.rotation.y = Math.PI;
             
