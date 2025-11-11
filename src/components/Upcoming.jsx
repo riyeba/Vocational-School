@@ -1312,6 +1312,7 @@ const GreenLeaveEvents = () => {
     const init = () => {
       // Scene
       scene = new THREE.Scene();
+      scene.background = null
 
       // Camera
       camera = new THREE.PerspectiveCamera(
