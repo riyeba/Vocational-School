@@ -1326,6 +1326,9 @@ const GreenLeaveEvents = () => {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
+
+      renderer.setClearColor(0x000000, 0); // Makes background transparent
+      scene.background = null; //
       renderer.domElement.style.position = "absolute";
       renderer.domElement.style.top = "0";
       renderer.domElement.style.left = "0";
@@ -1398,8 +1401,8 @@ const GreenLeaveEvents = () => {
           step.model,
           (gltf) => {
             const model = gltf.scene;
-            model.position.set(0, 0, -0.2); // In front of camera
-            model.scale.set(0.1, 0.1, 0.1);
+            model.position.set(0, -0.1, -0.3); // In front of camera
+            model.scale.set(0.2, 0.2, 0.2);
             scene.add(model);
 
             mixerRef.current = new THREE.AnimationMixer(model);
