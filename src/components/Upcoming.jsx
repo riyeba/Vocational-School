@@ -1106,9 +1106,9 @@ const steps = [
 
 const GreenLeaveEvents = () => {
   const mountRef = useRef(null);
+  const overlayRef = useRef(null);
   const mixerRef = useRef(null);
   const clock = useRef(new THREE.Clock());
-  const modelRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
@@ -1116,10 +1116,10 @@ const GreenLeaveEvents = () => {
     let animationId;
 
     const init = () => {
-      // Scene
+      // 1️⃣ Scene
       scene = new THREE.Scene();
 
-      // Camera
+      // 2️⃣ Camera
       camera = new THREE.PerspectiveCamera(
         70,
         window.innerWidth / window.innerHeight,
@@ -1127,20 +1127,37 @@ const GreenLeaveEvents = () => {
         20
       );
 
-      // Renderer
+      // 3️⃣ Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
+      
+      // Set renderer canvas style to ensure overlay works
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.top = '0';
+      renderer.domElement.style.left = '0';
+      
       mountRef.current.appendChild(renderer.domElement);
-      mountRef.current.appendChild(
-        ARButton.createButton(renderer, { requiredFeatures: ["hit-test"] })
-      );
+      
+      const arButton = ARButton.createButton(renderer, { 
+        requiredFeatures: ["hit-test"] 
+      });
+      arButton.style.position = 'absolute';
+      arButton.style.bottom = '20px';
+      arButton.style.left = '50%';
+      arButton.style.transform = 'translateX(-50%)';
+      arButton.style.zIndex = '100';
+      
+      mountRef.current.appendChild(arButton);
 
-      // Lights (stay in scene)
-      const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      scene.add(hemiLight);
+      // 4️⃣ Light
+      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      scene.add(light);
 
-      // Animation loop
+      // 5️⃣ Start first step
+      showStep(currentStep);
+
+      // 6️⃣ Animation loop
       const animate = () => {
         animationId = requestAnimationFrame(animate);
         const delta = clock.current.getDelta();
@@ -1149,7 +1166,7 @@ const GreenLeaveEvents = () => {
       };
       animate();
 
-      // Handle resize
+      // 7️⃣ Handle resize
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1157,27 +1174,21 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
-      // Start first step
-      showStep(currentStep);
-
-      // Cleanup
-      return () => {
-        cancelAnimationFrame(animationId);
-        if (mountRef.current) mountRef.current.innerHTML = "";
-        window.removeEventListener("resize", handleResize);
-      };
-
-      // Function to show a step
+      // 8️⃣ Show step function
       function showStep(index) {
-        // Remove previous model
-        if (modelRef.current) {
-          scene.remove(modelRef.current);
-          mixerRef.current = null;
-        }
+        // Clear old objects except lights
+        const objectsToRemove = [];
+        scene.children.forEach(child => {
+          if (!(child instanceof THREE.Light)) {
+            objectsToRemove.push(child);
+          }
+        });
+        objectsToRemove.forEach(obj => scene.remove(obj));
 
         const step = steps[index];
-        const loader = new GLTFLoader();
 
+        // Load 3D model
+        const loader = new GLTFLoader();
         loader.load(
           step.model,
           (gltf) => {
@@ -1185,54 +1196,62 @@ const GreenLeaveEvents = () => {
             model.position.set(0, -0.3, -1);
             model.scale.set(0.4, 0.4, 0.4);
             scene.add(model);
-            modelRef.current = model;
 
-            // Animation
+            mixerRef.current = new THREE.AnimationMixer(model);
             if (gltf.animations.length > 0) {
-              mixerRef.current = new THREE.AnimationMixer(model);
               const action = mixerRef.current.clipAction(gltf.animations[0]);
-              action.reset();
               action.play();
-
-              // Proceed to next step when animation finishes
-              action.clampWhenFinished = true;
-              action.loop = THREE.LoopOnce;
-              mixerRef.current.addEventListener("finished", () => {
-                if (index < steps.length - 1) {
-                  setCurrentStep(index + 1);
-                  showStep(index + 1);
-                }
-              });
-            } else {
-              // If no animation, fallback to timeout
-              setTimeout(() => {
-                if (index < steps.length - 1) {
-                  setCurrentStep(index + 1);
-                  showStep(index + 1);
-                }
-              }, 5000);
             }
           },
           undefined,
           (error) => console.error("Error loading model:", error)
         );
+
+        // Schedule next step
+        if (index < steps.length - 1) {
+          setTimeout(() => {
+            const nextStep = index + 1;
+            setCurrentStep(nextStep);
+            showStep(nextStep);
+          }, 5000); // 5 seconds per step
+        }
       }
+
+      // Cleanup function
+      return () => {
+        cancelAnimationFrame(animationId);
+        window.removeEventListener("resize", handleResize);
+      };
     };
 
-    init();
+    const cleanup = init();
+
+    return () => {
+      if (cleanup) cleanup();
+      if (mountRef.current) {
+        mountRef.current.innerHTML = "";
+      }
+    };
   }, []);
 
   return (
-    <div className="relative w-screen h-screen">
+    <div className="relative w-screen h-screen overflow-hidden">
       {/* Three.js AR Canvas */}
-      <div ref={mountRef} className="w-full h-full" />
+      <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Overlay instructions */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white p-3 rounded-lg z-50 text-center pointer-events-none">
-        {steps[currentStep]?.text || "Loading..."}
+      {/* Tailwind overlay instructions - positioned above everything */}
+      <div 
+        ref={overlayRef}
+        className="fixed top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white px-6 py-3 rounded-lg text-center pointer-events-none max-w-md"
+        style={{ zIndex: 9999 }}
+      >
+        <p className="text-lg font-semibold">
+          {steps[currentStep]?.text || "Loading..."}
+        </p>
       </div>
     </div>
   );
 };
 
 export default GreenLeaveEvents;
+
