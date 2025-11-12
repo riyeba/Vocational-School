@@ -1725,27 +1725,32 @@ const GreenLeaveEvents = () => {
   domOverlay: { root: document.body },
 });
 
-// Customize the AR button
+// Responsive + clear Start AR button
 arButton.textContent = "Start AR";
-arButton.style.position = "absolute";
-arButton.style.bottom = "40px";
-arButton.style.left = "50%";
-arButton.style.transform = "translateX(-50%)";
-arButton.style.padding = "14px 32px";
-arButton.style.fontSize = "18px";
-arButton.style.fontWeight = "600";
-arButton.style.backgroundColor = "#2563EB"; // Tailwind blue-600
-arButton.style.color = "#ffffff";
-arButton.style.border = "none";
-arButton.style.borderRadius = "9999px"; // full rounded
-arButton.style.cursor = "pointer";
-arButton.style.zIndex = "2000";
-arButton.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
-arButton.style.transition = "transform 0.2s ease, background-color 0.2s ease";
-arButton.onmouseenter = () => (arButton.style.backgroundColor = "#1E40AF"); // darker blue
-arButton.onmouseleave = () => (arButton.style.backgroundColor = "#2563EB");
+Object.assign(arButton.style, {
+  position: "absolute",
+  bottom: "5vh", // responsive spacing from bottom
+  left: "50%",
+  transform: "translateX(-50%)",
+  padding: "clamp(10px, 2vh, 16px) clamp(24px, 5vw, 40px)", // responsive padding
+  fontSize: "clamp(14px, 2.5vw, 18px)", // responsive font
+  fontWeight: "600",
+  backgroundColor: "#2563EB", // Tailwind blue-600
+  color: "#ffffff",
+  border: "none",
+  borderRadius: "9999px", // fully rounded
+  cursor: "pointer",
+  zIndex: "2000",
+  boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+  transition: "transform 0.2s ease, opacity 0.2s ease",
+});
+
+// Keep hover color same as background for clarity
+arButton.onmouseenter = () => (arButton.style.opacity = "0.9");
+arButton.onmouseleave = () => (arButton.style.opacity = "1");
 arButton.onmousedown = () => (arButton.style.transform = "translateX(-50%) scale(0.97)");
 arButton.onmouseup = () => (arButton.style.transform = "translateX(-50%) scale(1)");
+
 mountRef.current.appendChild(arButton);
 
 
@@ -1886,7 +1891,7 @@ mountRef.current.appendChild(arButton);
           {/* Updated instruction box */}
           <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-8">
             <p className="text-base font-medium">
-              Tap anywhere to enable sound, then tap <strong>“Start AR”</strong> below to begin your
+               Tap <strong>“Start AR”</strong> below to begin your
               interactive hand-washing guide.
             </p>
           </div>
