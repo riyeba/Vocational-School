@@ -1727,13 +1727,13 @@ const GreenLeaveEvents = () => {
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // 🔊 Speech synthesis setup
+      // 🔊 Speech synthesis
       const speak = (text) => {
         if (!("speechSynthesis" in window)) {
           console.warn("Speech Synthesis not supported.");
           return;
         }
-        window.speechSynthesis.cancel(); // Stop previous utterances
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "en-US";
         utterance.pitch = 1;
@@ -1741,20 +1741,20 @@ const GreenLeaveEvents = () => {
         window.speechSynthesis.speak(utterance);
       };
 
-      // 🔓 Unlock voice (bypass browser restriction)
+      // 🔓 Unlock voice immediately (on first click anywhere)
       const unlockVoice = () => {
         const silent = new SpeechSynthesisUtterance("");
         window.speechSynthesis.speak(silent);
         document.removeEventListener("click", unlockVoice);
+        console.log("Voice unlocked.");
       };
-      document.addEventListener("click", unlockVoice);
+      document.addEventListener("click", unlockVoice, { once: true });
 
       // AR session events
       renderer.xr.addEventListener("sessionstart", () => {
         console.log("AR Session Started!");
         setIsARActive(true);
         setCurrentStep(0);
-        unlockVoice(); // Ensure voice unlocked
         showStep(0);
       });
 
@@ -1780,7 +1780,7 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
-      // Show each step
+      // Show steps
       function showStep(index) {
         setCurrentStep(index);
         scene.children
@@ -1810,7 +1810,6 @@ const GreenLeaveEvents = () => {
         // 🔊 Speak the step text
         speak(step.text);
 
-        // Next step after 5 seconds
         if (index < steps.length - 1) {
           setTimeout(() => showStep(index + 1), 5000);
         }
@@ -1834,7 +1833,7 @@ const GreenLeaveEvents = () => {
       {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Overlay showing step text */}
+      {/* Overlay for current step */}
       {isARActive && (
         <div
           ref={overlayRef}
@@ -1855,9 +1854,10 @@ const GreenLeaveEvents = () => {
           </div>
 
           {/* Updated instruction box */}
-          <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-6">
+          <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-8">
             <p className="text-base font-medium">
-              Tap <strong>“Start AR”</strong> below to begin your interactive hand-washing guide.
+              Tap anywhere to enable sound, then tap <strong>“Start AR”</strong> below to begin your
+              interactive hand-washing guide.
             </p>
           </div>
         </div>
@@ -1867,4 +1867,5 @@ const GreenLeaveEvents = () => {
 };
 
 export default GreenLeaveEvents;
+
 
