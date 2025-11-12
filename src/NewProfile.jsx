@@ -1365,7 +1365,7 @@ export default function NewProfile() {
         {isProcessing && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
             <div className="bg-blue-600/90 backdrop-blur-sm px-6 py-3 rounded-full border border-white/30">
-              <p className="text-white font-semibold">🔄 AI Analyzing...</p>
+              {/* <p className="text-white font-semibold">🔄 AI Analyzing...</p> */}
             </div>
           </div>
         )}
