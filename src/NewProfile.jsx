@@ -622,6 +622,370 @@
 
 
 
+// import React, { useEffect, useRef, useState } from "react";
+
+// export default function NewProfile() {
+//   const videoRef = useRef(null);
+//   const canvasRef = useRef(null);
+//   const [stepIndex, setStepIndex] = useState(0);
+//   const [stepText, setStepText] = useState("");
+//   const [feedback, setFeedback] = useState("");
+//   const [isProcessing, setIsProcessing] = useState(false);
+//   const [fps, setFps] = useState(0);
+//   const [latency, setLatency] = useState(0);
+//   const [isStarted, setIsStarted] = useState(false);
+  
+//   const stepIndexRef = useRef(0);
+//   const lastFrameCaptureRef = useRef(0);
+//   const cameraRef = useRef(null);
+//   const handsRef = useRef(null);
+//   const fpsCounterRef = useRef({ frames: 0, lastTime: Date.now() });
+
+//   const handwashingSteps = [
+//     {
+//       text: "Step 1: Wet your hands and apply soap",
+//       instruction: "Turn on water, wet both hands thoroughly, then apply soap to your palms.",
+//     },
+//     {
+//       text: "Step 2: Rub palms together in circular motions",
+//       instruction: "Place both palms together and rub them in circular motion for proper soap distribution.",
+//     },
+//     {
+//       text: "Step 3: Rub the back of each hand",
+//       instruction: "Place one palm on the back of the other hand and rub, then switch hands.",
+//     },
+//     {
+//       text: "Step 4: Interlace fingers and clean between them",
+//       instruction: "Interlock your fingers and rub them together to clean between the fingers.",
+//     },
+//     {
+//       text: "Step 5: Clean thumbs by rotating in opposite palm",
+//       instruction: "Grasp each thumb with the opposite hand and rotate to clean thoroughly.",
+//     },
+//     {
+//       text: "Step 6: Rub fingertips on opposite palm",
+//       instruction: "Place fingertips in opposite palm and rub in circular motion.",
+//     },
+//     {
+//       text: "Step 7: Rinse hands thoroughly",
+//       instruction: "Hold hands under running water and ensure all soap is rinsed off.",
+//     },
+//     {
+//       text: "✅ Perfect! Handwashing complete - 20 seconds minimum",
+//       instruction: "Great job! Your hands are now properly sanitized.",
+//     }
+//   ];
+
+//   const speak = (text) => {
+//     const utterance = new SpeechSynthesisUtterance(text);
+//     utterance.lang = "en-US";
+//     utterance.pitch = 1;
+//     utterance.rate = 0.9;
+//     window.speechSynthesis.cancel();
+//     window.speechSynthesis.speak(utterance);
+//   };
+
+//   const updateFPS = () => {
+//     const now = Date.now();
+//     fpsCounterRef.current.frames++;
+    
+//     if (now - fpsCounterRef.current.lastTime >= 1000) {
+//       setFps(fpsCounterRef.current.frames);
+//       fpsCounterRef.current.frames = 0;
+//       fpsCounterRef.current.lastTime = now;
+//     }
+//   };
+
+//   const captureFrame = () => {
+//     const canvas = canvasRef.current;
+//     if (!canvas) return null;
+//     return canvas.toDataURL('image/jpeg', 0.7);
+//   };
+
+//   const analyzeWithAI = (imageData, currentStep) => {
+//     // Auto-advance to next step after delay
+//     setTimeout(() => advanceStep(currentStep + 1), 2000);
+//   };
+
+//   const advanceStep = (newIndex) => {
+//     if (newIndex < handwashingSteps.length) {
+//       stepIndexRef.current = newIndex;
+//       setStepIndex(newIndex);
+//       setStepText(handwashingSteps[newIndex].text);
+//       setFeedback("");
+//       speak(handwashingSteps[newIndex].text);
+//     }
+//   };
+
+//   const startTraining = () => {
+//     setIsStarted(true);
+//     setStepIndex(0);
+//     stepIndexRef.current = 0;
+//     setFeedback("Starting camera...");
+//     setTimeout(() => {
+//       setStepText(handwashingSteps[0].text);
+//       speak(handwashingSteps[0].text);
+//       setFeedback("");
+//     }, 2000);
+//   };
+
+//   const resetTraining = () => {
+//     setIsStarted(false);
+//     setStepIndex(0);
+//     stepIndexRef.current = 0;
+//     setStepText("");
+//     setFeedback("");
+//     window.speechSynthesis.cancel();
+//   };
+
+//   useEffect(() => {
+//     if (!isStarted) return;
+
+//     const videoElement = videoRef.current;
+//     const canvasElement = canvasRef.current;
+//     const canvasCtx = canvasElement.getContext("2d");
+
+//     let scriptsLoaded = false;
+
+//     const script1 = document.createElement("script");
+//     const script2 = document.createElement("script");
+//     const script3 = document.createElement("script");
+    
+//     script1.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
+//     script2.src = "https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js";
+//     script3.src = "https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js";
+
+//     script1.onload = () => {
+//       script2.onload = () => {
+//         script3.onload = () => {
+//           if (scriptsLoaded) return;
+//           scriptsLoaded = true;
+
+//           const hands = new window.Hands({
+//             locateFile: (file) =>
+//               `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+//           });
+
+//           hands.setOptions({
+//             maxNumHands: 2,
+//             modelComplexity: 1,
+//             minDetectionConfidence: 0.7,
+//             minTrackingConfidence: 0.7,
+//           });
+
+//           hands.onResults((results) => {
+//             updateFPS();
+            
+//             canvasCtx.save();
+//             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+//             canvasCtx.drawImage(
+//               results.image,
+//               0,
+//               0,
+//               canvasElement.width,
+//               canvasElement.height
+//             );
+
+//             if (results.multiHandLandmarks) {
+//               for (const landmarks of results.multiHandLandmarks) {
+//                 const connections = [
+//                   [0,1],[1,2],[2,3],[3,4],
+//                   [0,5],[5,6],[6,7],[7,8],
+//                   [0,9],[9,10],[10,11],[11,12],
+//                   [0,13],[13,14],[14,15],[15,16],
+//                   [0,17],[17,18],[18,19],[19,20],
+//                   [5,9],[9,13],[13,17]
+//                 ];
+                
+//                 canvasCtx.strokeStyle = "rgba(0, 200, 255, 0.7)";
+//                 canvasCtx.lineWidth = 2;
+//                 for (const [start, end] of connections) {
+//                   canvasCtx.beginPath();
+//                   canvasCtx.moveTo(
+//                     landmarks[start].x * canvasElement.width,
+//                     landmarks[start].y * canvasElement.height
+//                   );
+//                   canvasCtx.lineTo(
+//                     landmarks[end].x * canvasElement.width,
+//                     landmarks[end].y * canvasElement.height
+//                   );
+//                   canvasCtx.stroke();
+//                 }
+                
+//                 canvasCtx.fillStyle = "rgba(0, 255, 100, 0.9)";
+//                 for (const point of landmarks) {
+//                   canvasCtx.beginPath();
+//                   canvasCtx.arc(
+//                     point.x * canvasElement.width,
+//                     point.y * canvasElement.height,
+//                     4,
+//                     0,
+//                     2 * Math.PI
+//                   );
+//                   canvasCtx.fill();
+//                 }
+//               }
+
+//               const now = Date.now();
+//               const currentStep = stepIndexRef.current;
+              
+//               if (results.multiHandLandmarks.length >= 1 && 
+//                   now - lastFrameCaptureRef.current > 4000 && 
+//                   currentStep < handwashingSteps.length - 1 &&
+//                   !isProcessing) {
+                
+//                 lastFrameCaptureRef.current = now;
+//                 const frameData = captureFrame();
+//                 analyzeWithAI(frameData, currentStep);
+//               }
+//             }
+
+//             canvasCtx.restore();
+//           });
+
+//           handsRef.current = hands;
+
+//           const camera = new window.Camera(videoElement, {
+//             onFrame: async () => {
+//               await hands.send({ image: videoElement });
+//             },
+//             width: 640,
+//             height: 480,
+//           });
+          
+//           cameraRef.current = camera;
+//           camera.start();
+//         };
+//         document.body.appendChild(script3);
+//       };
+//       document.body.appendChild(script2);
+//     };
+//     document.body.appendChild(script1);
+
+//     return () => {
+//       window.speechSynthesis.cancel();
+      
+//       if (cameraRef.current && cameraRef.current.stop) {
+//         cameraRef.current.stop();
+//       }
+      
+//       if (handsRef.current && handsRef.current.close) {
+//         handsRef.current.close();
+//       }
+//     };
+//   }, [isStarted]);
+
+//   if (!isStarted) {
+//     return (
+//       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
+//         <div className="text-center mb-8">
+//           <h1 className="text-white text-5xl font-bold mb-3">
+//             🧼 Hand Washing Training
+//           </h1>
+//           <p className="text-blue-200 text-xl mb-2">
+//             AI-Powered AR Training System
+//           </p>
+//           <p className="text-blue-300 text-base">
+//             Learn the proper 7-step handwashing technique
+//           </p>
+//         </div>
+
+//         <button
+//           onClick={startTraining}
+//           className="bg-gradient-to-br from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-2xl px-12 py-6 text-2xl font-bold shadow-2xl transform hover:scale-105 transition-all"
+//         >
+//           Start Training
+//         </button>
+
+//         <div className="mt-8 text-center max-w-md">
+//           <p className="text-blue-200 text-base mb-4">
+//             💡 Please raise your hands
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
+//       <div className="text-center mb-3">
+//         <h1 className="text-white text-2xl font-bold mb-1">
+//           🧼 Hand Hygiene Training
+//         </h1>
+//         <button
+//           onClick={resetTraining}
+//           className="text-blue-300 text-sm hover:text-blue-100 underline"
+//         >
+//           ← Reset Training
+//         </button>
+//       </div>
+      
+//       <div className="relative">
+//         <video
+//           ref={videoRef}
+//           className="hidden"
+//           width="640"
+//           height="480"
+//           autoPlay
+//           playsInline
+//         ></video>
+//         <canvas
+//           ref={canvasRef}
+//           className="rounded-2xl border-4 border-blue-400 shadow-2xl"
+//           width="640"
+//           height="480"
+//         ></canvas>
+
+//         <div className="absolute top-2 right-2 bg-black/70 rounded-lg px-2 py-1 text-xs">
+//           <div className="text-green-400">FPS: {fps}</div>
+//           <div className="text-blue-400">Latency: {latency}ms</div>
+//         </div>
+
+//         <div className="absolute top-4 left-4 right-4">
+//           <div className="bg-black/70 backdrop-blur-sm rounded-xl p-3 border border-blue-400/30">
+//             <div className="flex justify-between mb-2">
+//               {handwashingSteps.slice(0, -1).map((_, idx) => (
+//                 <div
+//                   key={idx}
+//                   className={`h-2 flex-1 mx-1 rounded-full transition-all ${
+//                     idx < stepIndex
+//                       ? "bg-green-400"
+//                       : idx === stepIndex
+//                       ? "bg-blue-400 animate-pulse"
+//                       : "bg-gray-600"
+//                   }`}
+//                 />
+//               ))}
+//             </div>
+//             <p className="text-white text-sm font-semibold text-center">
+//               {stepText}
+//             </p>
+//           </div>
+//         </div>
+
+//         {feedback && (
+//           <div className="absolute bottom-4 left-4 right-4">
+//             <div className="bg-gradient-to-r from-purple-600/90 to-blue-600/90 backdrop-blur-sm rounded-xl py-3 px-4 border border-white/20 shadow-lg">
+//               <p className="text-white text-sm font-medium text-center">
+//                 {feedback}
+//               </p>
+//             </div>
+//           </div>
+//         )}
+
+//         {isProcessing && (
+//           <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+//             <div className="bg-blue-600/90 backdrop-blur-sm px-6 py-3 rounded-full border border-white/30">
+//               <p className="text-white font-semibold">🔄 AI Analyzing...</p>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
 import React, { useEffect, useRef, useState } from "react";
 
 export default function NewProfile() {
@@ -671,16 +1035,17 @@ export default function NewProfile() {
       instruction: "Hold hands under running water and ensure all soap is rinsed off.",
     },
     {
-      text: "✅ Perfect! Handwashing complete - 20 seconds minimum",
-      instruction: "Great job! Your hands are now properly sanitized.",
+      text: "Perfect! Handwashing complete",
+      instruction: "Great job! Your hands are now properly sanitized. The entire process should take at least 20 seconds.",
     }
   ];
 
-  const speak = (text) => {
+  const speak = (text, isInstruction = false) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
-    utterance.pitch = 1;
-    utterance.rate = 0.9;
+    utterance.pitch = isInstruction ? 1.1 : 1;
+    utterance.rate = isInstruction ? 0.85 : 0.9;
+    utterance.volume = 1.0;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   };
@@ -703,8 +1068,21 @@ export default function NewProfile() {
   };
 
   const analyzeWithAI = (imageData, currentStep) => {
+    // Provide encouraging feedback
+    const encouragements = [
+      "Good technique! Moving to next step.",
+      "Well done! Let's continue.",
+      "Great job! Next step coming up.",
+      "Perfect! Advancing now.",
+      "Excellent work! Keep it up."
+    ];
+    
+    const feedback = encouragements[Math.floor(Math.random() * encouragements.length)];
+    setFeedback(feedback);
+    speak(feedback);
+    
     // Auto-advance to next step after delay
-    setTimeout(() => advanceStep(currentStep + 1), 2000);
+    setTimeout(() => advanceStep(currentStep + 1), 3000);
   };
 
   const advanceStep = (newIndex) => {
@@ -713,7 +1091,14 @@ export default function NewProfile() {
       setStepIndex(newIndex);
       setStepText(handwashingSteps[newIndex].text);
       setFeedback("");
+      
+      // Speak the step title first
       speak(handwashingSteps[newIndex].text);
+      
+      // Then speak the detailed instruction after a short pause
+      setTimeout(() => {
+        speak(handwashingSteps[newIndex].instruction, true);
+      }, 2500);
     }
   };
 
@@ -722,11 +1107,15 @@ export default function NewProfile() {
     setStepIndex(0);
     stepIndexRef.current = 0;
     setFeedback("Starting camera...");
+    speak("Welcome to hand washing training. Starting camera now.");
     setTimeout(() => {
       setStepText(handwashingSteps[0].text);
       speak(handwashingSteps[0].text);
+      setTimeout(() => {
+        speak(handwashingSteps[0].instruction, true);
+      }, 2500);
       setFeedback("");
-    }, 2000);
+    }, 3000);
   };
 
   const resetTraining = () => {
@@ -899,7 +1288,7 @@ export default function NewProfile() {
 
         <div className="mt-8 text-center max-w-md">
           <p className="text-blue-200 text-base mb-4">
-            💡 Please raise your hands
+            💡 Please raise your hands in front of the camera
           </p>
         </div>
       </div>
