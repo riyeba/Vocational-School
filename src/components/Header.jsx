@@ -39,24 +39,13 @@ function Header() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <NavLink to="/" className="text-2xl font-bold text-green-500 hover:text-green-600 transition-colors">
-                GreenLeaf
+                Vocational School
               </NavLink>
             </div>
             
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6">
-              <NavLink 
-                to="/" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center px-2 py-1 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-              >
-                <Home className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Home</span>
-              </NavLink>
+           
               
               <NavLink 
                 to="/event" 
@@ -68,47 +57,12 @@ function Header() {
                 )}
               >
                 <Calendar className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Events</span>
+                <span className="hidden xl:inline">Three</span>
               </NavLink>
               
-              <NavLink 
-                to="/feed" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center px-2 py-1 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-              >
-                <Users className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Feed</span>
-              </NavLink>
               
-              <NavLink 
-                to="/register" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center px-2 py-1 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-              >
-                <MessageCircle className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Messages</span>
-              </NavLink>
               
-              <NavLink 
-                to="/profile" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center px-2 py-1 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-              >
-                <User className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Profile</span>
-              </NavLink>
+              
 
                <NavLink 
                 to="/newprofile" 
@@ -120,45 +74,16 @@ function Header() {
                 )}
               >
                 <User className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">NewProfile</span>
+                <span className="hidden xl:inline">MediaPipe</span>
               </NavLink>
 
-              <NavLink 
-                to="/connect" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center px-2 py-1 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-              >
-                <User className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Connect</span>
-              </NavLink>
               
-              <NavLink 
-                to="/signup" 
-                className="flex items-center px-3 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors duration-200 font-medium"
-              >
-                <UserCheck className="w-4 h-4 mr-1" />
-                <span className="hidden xl:inline">Sign Up</span>
-              </NavLink>
+             
             </nav>
 
             {/* Tablet Navigation (md to lg) */}
             <nav className="hidden md:flex lg:hidden items-center space-x-3">
-              <NavLink 
-                to="/" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center p-2 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-                title="Home"
-              >
-                <Home className="w-5 h-5" />
-              </NavLink>
+              
               
               <NavLink 
                 to="/event" 
@@ -168,59 +93,20 @@ function Header() {
                   "text-green-600 bg-green-50",
                   "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                 )}
-                title="Events"
+                title="Three"
               >
                 <Calendar className="w-5 h-5" />
               </NavLink>
               
-              <NavLink 
-                to="/feed" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center p-2 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-                title="Feed"
-              >
-                <Users className="w-5 h-5" />
-              </NavLink>
               
-              <NavLink 
-                to="/register" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center p-2 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-                title="Messages"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </NavLink>
               
-              <NavLink 
-                to="/profile" 
-                className={({ isActive }) => getNavLinkClass(
-                  isActive,
-                  "flex items-center p-2 rounded-md transition-colors duration-200",
-                  "text-green-600 bg-green-50",
-                  "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                )}
-                title="Profile"
-              >
-                <User className="w-5 h-5" />
-              </NavLink>
+             
+              
+              
 
               
               
-              <NavLink 
-                to="/signup" 
-                className="flex items-center p-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors duration-200" 
-                title="Sign Up"
-              >
-                <UserCheck className="w-5 h-5" />
-              </NavLink>
+             
               
             </nav>
 
@@ -263,19 +149,7 @@ function Header() {
           
           {/* Navigation Links */}
           <nav className="flex flex-col p-4 space-y-2">
-            <NavLink 
-              to="/" 
-              onClick={() => handleMobileNavClick()}
-              className={({ isActive }) => getNavLinkClass(
-                isActive,
-                "flex items-center text-xl py-4 px-2 rounded-lg transition-colors duration-200",
-                "text-green-600 bg-green-50",
-                "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              )}
-            >
-              <Home className="w-6 h-6 mr-3" />
-              Home
-            </NavLink>
+            
             
             <NavLink 
               to="/event" 
@@ -288,64 +162,15 @@ function Header() {
               )}
             >
               <Calendar className="w-6 h-6 mr-3" />
-              Events
+              Three
             </NavLink>
             
-            <NavLink 
-              to="/feed" 
-              onClick={() => handleMobileNavClick()}
-              className={({ isActive }) => getNavLinkClass(
-                isActive,
-                "flex items-center text-xl py-4 px-2 rounded-lg transition-colors duration-200",
-                "text-green-600 bg-green-50",
-                "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              )}
-            >
-              <Users className="w-6 h-6 mr-3" />
-              Feed
-            </NavLink>
+            
 
-            <NavLink 
-              to="/connect" 
-              onClick={() => handleMobileNavClick()}
-              className={({ isActive }) => getNavLinkClass(
-                isActive,
-                "flex items-center text-xl py-4 px-2 rounded-lg transition-colors duration-200",
-                "text-green-600 bg-green-50",
-                "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              )}
-            >
-              <Users className="w-6 h-6 mr-3" />
-              Connect
-            </NavLink>
             
-            <NavLink 
-              to="/register" 
-              onClick={() => handleMobileNavClick()}
-              className={({ isActive }) => getNavLinkClass(
-                isActive,
-                "flex items-center text-xl py-4 px-2 rounded-lg transition-colors duration-200",
-                "text-green-600 bg-green-50",
-                "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              )}
-            >
-              <MessageCircle className="w-6 h-6 mr-3" />
-              Messages
-            </NavLink>
             
-            <NavLink
-              to="/profile" 
-              onClick={() => handleMobileNavClick()}
-              className={({ isActive }) => getNavLinkClass(
-                isActive,
-                "flex items-center text-xl py-4 px-2 rounded-lg transition-colors duration-200",
-                "text-green-600 bg-green-50",
-                "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              )}
-            >
-              <User className="w-6 h-6 mr-3" />
-              Profile
-            </NavLink>
+            
+            
 
             <NavLink
               to="/newprofile" 
@@ -358,17 +183,10 @@ function Header() {
               )}
             >
               <User className="w-6 h-6 mr-3" />
-              New Profile
+              MediaPipe
             </NavLink>
             
-            <NavLink 
-              to="/signup" 
-              onClick={() => handleMobileNavClick()}
-              className="flex items-center text-xl text-white bg-green-600 hover:bg-green-700 py-4 px-2 rounded-lg transition-colors duration-200 mt-4"
-            >
-              <UserCheck className="w-6 h-6 mr-3" />
-              Sign Up
-            </NavLink>
+           
           </nav>
         </div>
       </header>
