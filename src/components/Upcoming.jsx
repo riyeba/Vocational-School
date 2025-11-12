@@ -1469,6 +1469,199 @@
 
 // export default GreenLeaveEvents;
 
+// import React, { useEffect, useRef, useState } from "react";
+// import * as THREE from "three";
+// import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
+// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+// const steps = [
+//   { text: "Step 1: Wet your hands and apply soap", model: "/image/two_hands.glb" },
+//   { text: "Step 2: Rub palms together in circular motions", model: "/image/two_hands.glb" },
+//   { text: "Step 3: Rub the back of each hand", model: "/image/two_hands.glb" }, 
+//   { text: "Step 4: Interlace fingers and clean between them", model: "/image/two_hands.glb" },
+//   { text: "Step 5: Clean thumbs by rotating in opposite palm", model: "/image/two_hands.glb" },
+//   { text: "Step 6: Rub fingertips on opposite palm", model: "/image/two_hands.glb" }, 
+//     { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
+// ];
+
+// const GreenLeaveEvents = () => {
+//   const mountRef = useRef(null);
+//   const overlayRef = useRef(null);
+//   const mixerRef = useRef(null);
+//   const clock = useRef(new THREE.Clock());
+//   const [currentStep, setCurrentStep] = useState(0);
+//   const [isARActive, setIsARActive] = useState(false);
+
+//   useEffect(() => {
+//     let scene, camera, renderer;
+
+//     const init = () => {
+//       // Scene
+//       scene = new THREE.Scene();
+      
+
+//       // Camera
+//       camera = new THREE.PerspectiveCamera(
+//         70,
+//         window.innerWidth / window.innerHeight,
+//         0.01,
+//         20
+//       );
+
+//       // Renderer
+//       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+//       renderer.setSize(window.innerWidth, window.innerHeight);
+//       renderer.xr.enabled = true;
+
+//       renderer.setClearColor(0x000000, 0); // Makes background transparent
+//       scene.background = null; //
+//       renderer.domElement.style.position = "absolute";
+//       renderer.domElement.style.top = "0";
+//       renderer.domElement.style.left = "0";
+//       mountRef.current.appendChild(renderer.domElement);
+
+//       // AR Button
+//       const arButton = ARButton.createButton(renderer, {
+//         optionalFeatures: ["local-floor", "dom-overlay"],
+//         domOverlay: { root: document.body },
+//       });
+//       arButton.style.position = "absolute";
+//       arButton.style.bottom = "20px";
+//       arButton.style.left = "50%";
+//       arButton.style.transform = "translateX(-50%)";
+//       arButton.style.zIndex = "100";
+//       mountRef.current.appendChild(arButton);
+
+//       // Light
+//       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+//       scene.add(light);
+
+//       const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+//       dirLight.position.set(0, 5, 5);
+//       scene.add(dirLight);
+
+//       // AR session start
+//       renderer.xr.addEventListener("sessionstart", () => {
+//         console.log("AR Session Started!");
+//         setIsARActive(true);
+//         setCurrentStep(0);
+//         showStep(0);
+//       });
+
+//       // AR session end
+//       renderer.xr.addEventListener("sessionend", () => {
+//         setIsARActive(false);
+//         // Remove all objects except lights
+//         scene.children
+//           .filter((child) => !(child instanceof THREE.Light))
+//           .forEach((child) => scene.remove(child));
+//       });
+
+//       // Animation loop
+//       renderer.setAnimationLoop(() => {
+//         const delta = clock.current.getDelta();
+//         if (mixerRef.current) mixerRef.current.update(delta);
+//         renderer.render(scene, camera);
+//       });
+
+//       // Handle resize
+//       const handleResize = () => {
+//         camera.aspect = window.innerWidth / window.innerHeight;
+//         camera.updateProjectionMatrix();
+//         renderer.setSize(window.innerWidth, window.innerHeight);
+//       };
+//       window.addEventListener("resize", handleResize);
+
+//       // Show each step
+//       function showStep(index) {
+//         setCurrentStep(index); // Update overlay
+
+//         // Remove previous models
+//         scene.children
+//           .filter((child) => !(child instanceof THREE.Light))
+//           .forEach((child) => scene.remove(child));
+
+//         const step = steps[index];
+//         const loader = new GLTFLoader();
+//         loader.load(
+//           step.model,
+//           (gltf) => {
+//             const model = gltf.scene;
+            
+//             // Position model further away and at eye level
+//             model.position.set(0, 0, -1.5); // Moved further back
+//             model.scale.set(0.2, 0.2, 0.2); // Slightly smaller
+            
+//             // Rotate model to face camera
+//             model.rotation.y = Math.PI;
+            
+//             scene.add(model);
+
+//             mixerRef.current = new THREE.AnimationMixer(model);
+//             if (gltf.animations.length > 0) {
+//               mixerRef.current.clipAction(gltf.animations[0]).play();
+//             }
+//           },
+//           undefined,
+//           (error) => console.error("Error loading model:", error)
+//         );
+
+//         // Next step after 5 seconds
+//         if (index < steps.length - 1) {
+//           setTimeout(() => showStep(index + 1), 5000);
+//         }
+//       }
+
+//       // Cleanup
+//       return () => {
+//         renderer.setAnimationLoop(null);
+//         window.removeEventListener("resize", handleResize);
+//       };
+//     };
+
+//     const cleanup = init();
+//     return () => {
+//       if (cleanup) cleanup();
+//       if (mountRef.current) mountRef.current.innerHTML = "";
+//     };
+//   }, []);
+
+//   return (
+//     <div className="relative w-screen h-screen overflow-hidden">
+//       {/* Three.js AR Canvas */}
+//       <div ref={mountRef} className="absolute inset-0" />
+
+//       {/* Overlay */}
+//       {isARActive && (
+//         <div
+//           ref={overlayRef}
+//           className="fixed top-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-4 rounded-2xl text-center pointer-events-none max-w-md shadow-2xl border-4 border-white"
+//           style={{ zIndex: 9999 }}
+//         >
+//           <p className="text-2xl font-bold">
+//             {steps[currentStep]?.text || "Loading..."}
+//           </p>
+//         </div>
+//       )}
+
+//       {/* Instructions before AR starts */}
+//       {!isARActive && (
+//         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+//           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
+//             <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
+//             <p className="text-sm text-blue-600">
+//               Click &quot;Start AR&quot; to begin the interactive hand washing guide
+//             </p>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default GreenLeaveEvents;
+
+
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ARButton } from "three/examples/jsm/webxr/ARButton.js";
@@ -1477,11 +1670,11 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 const steps = [
   { text: "Step 1: Wet your hands and apply soap", model: "/image/two_hands.glb" },
   { text: "Step 2: Rub palms together in circular motions", model: "/image/two_hands.glb" },
-  { text: "Step 3: Rub the back of each hand", model: "/image/two_hands.glb" }, 
+  { text: "Step 3: Rub the back of each hand", model: "/image/two_hands.glb" },
   { text: "Step 4: Interlace fingers and clean between them", model: "/image/two_hands.glb" },
   { text: "Step 5: Clean thumbs by rotating in opposite palm", model: "/image/two_hands.glb" },
-  { text: "Step 6: Rub fingertips on opposite palm", model: "/image/two_hands.glb" }, 
-    { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
+  { text: "Step 6: Rub fingertips on opposite palm", model: "/image/two_hands.glb" },
+  { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
 ];
 
 const GreenLeaveEvents = () => {
@@ -1496,11 +1689,8 @@ const GreenLeaveEvents = () => {
     let scene, camera, renderer;
 
     const init = () => {
-      // Scene
       scene = new THREE.Scene();
-      
 
-      // Camera
       camera = new THREE.PerspectiveCamera(
         70,
         window.innerWidth / window.innerHeight,
@@ -1508,19 +1698,16 @@ const GreenLeaveEvents = () => {
         20
       );
 
-      // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
-
-      renderer.setClearColor(0x000000, 0); // Makes background transparent
-      scene.background = null; //
+      renderer.setClearColor(0x000000, 0);
+      scene.background = null;
       renderer.domElement.style.position = "absolute";
       renderer.domElement.style.top = "0";
       renderer.domElement.style.left = "0";
       mountRef.current.appendChild(renderer.domElement);
 
-      // AR Button
       const arButton = ARButton.createButton(renderer, {
         optionalFeatures: ["local-floor", "dom-overlay"],
         domOverlay: { root: document.body },
@@ -1532,7 +1719,6 @@ const GreenLeaveEvents = () => {
       arButton.style.zIndex = "100";
       mountRef.current.appendChild(arButton);
 
-      // Light
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(light);
 
@@ -1540,7 +1726,20 @@ const GreenLeaveEvents = () => {
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // AR session start
+      // Speech function
+      const speak = (text) => {
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel(); // Stop any ongoing speech
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = "en-US";
+          utterance.pitch = 1;
+          utterance.rate = 1;
+          window.speechSynthesis.speak(utterance);
+        } else {
+          console.warn("Speech Synthesis not supported in this browser.");
+        }
+      };
+
       renderer.xr.addEventListener("sessionstart", () => {
         console.log("AR Session Started!");
         setIsARActive(true);
@@ -1548,23 +1747,19 @@ const GreenLeaveEvents = () => {
         showStep(0);
       });
 
-      // AR session end
       renderer.xr.addEventListener("sessionend", () => {
         setIsARActive(false);
-        // Remove all objects except lights
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
           .forEach((child) => scene.remove(child));
       });
 
-      // Animation loop
       renderer.setAnimationLoop(() => {
         const delta = clock.current.getDelta();
         if (mixerRef.current) mixerRef.current.update(delta);
         renderer.render(scene, camera);
       });
 
-      // Handle resize
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1572,11 +1767,8 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
-      // Show each step
       function showStep(index) {
-        setCurrentStep(index); // Update overlay
-
-        // Remove previous models
+        setCurrentStep(index);
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
           .forEach((child) => scene.remove(child));
@@ -1587,14 +1779,9 @@ const GreenLeaveEvents = () => {
           step.model,
           (gltf) => {
             const model = gltf.scene;
-            
-            // Position model further away and at eye level
-            model.position.set(0, 0, -1.5); // Moved further back
-            model.scale.set(0.2, 0.2, 0.2); // Slightly smaller
-            
-            // Rotate model to face camera
+            model.position.set(0, 0, -1.5);
+            model.scale.set(0.2, 0.2, 0.2);
             model.rotation.y = Math.PI;
-            
             scene.add(model);
 
             mixerRef.current = new THREE.AnimationMixer(model);
@@ -1606,13 +1793,14 @@ const GreenLeaveEvents = () => {
           (error) => console.error("Error loading model:", error)
         );
 
-        // Next step after 5 seconds
+        // 🔊 Speak the step text
+        speak(step.text);
+
         if (index < steps.length - 1) {
           setTimeout(() => showStep(index + 1), 5000);
         }
       }
 
-      // Cleanup
       return () => {
         renderer.setAnimationLoop(null);
         window.removeEventListener("resize", handleResize);
@@ -1628,10 +1816,8 @@ const GreenLeaveEvents = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* Overlay */}
       {isARActive && (
         <div
           ref={overlayRef}
@@ -1644,13 +1830,12 @@ const GreenLeaveEvents = () => {
         </div>
       )}
 
-      {/* Instructions before AR starts */}
       {!isARActive && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
             <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
             <p className="text-sm text-blue-600">
-              Click &quot;Start AR&quot; to begin the interactive hand washing guide
+              Click "Start AR" to begin the interactive hand washing guide
             </p>
           </div>
         </div>
@@ -1660,3 +1845,4 @@ const GreenLeaveEvents = () => {
 };
 
 export default GreenLeaveEvents;
+
