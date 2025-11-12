@@ -1709,16 +1709,45 @@ const GreenLeaveEvents = () => {
       mountRef.current.appendChild(renderer.domElement);
 
       // AR Button
+      // const arButton = ARButton.createButton(renderer, {
+      //   optionalFeatures: ["local-floor", "dom-overlay"],
+      //   domOverlay: { root: document.body },
+      // });
+      // arButton.style.position = "absolute";
+      // arButton.style.bottom = "20px";
+      // arButton.style.left = "50%";
+      // arButton.style.transform = "translateX(-50%)";
+      // arButton.style.zIndex = "100";
+      // mountRef.current.appendChild(arButton);
+
       const arButton = ARButton.createButton(renderer, {
-        optionalFeatures: ["local-floor", "dom-overlay"],
-        domOverlay: { root: document.body },
-      });
-      arButton.style.position = "absolute";
-      arButton.style.bottom = "20px";
-      arButton.style.left = "50%";
-      arButton.style.transform = "translateX(-50%)";
-      arButton.style.zIndex = "100";
-      mountRef.current.appendChild(arButton);
+  optionalFeatures: ["local-floor", "dom-overlay"],
+  domOverlay: { root: document.body },
+});
+
+// Customize the AR button
+arButton.textContent = "Start AR";
+arButton.style.position = "absolute";
+arButton.style.bottom = "40px";
+arButton.style.left = "50%";
+arButton.style.transform = "translateX(-50%)";
+arButton.style.padding = "14px 32px";
+arButton.style.fontSize = "18px";
+arButton.style.fontWeight = "600";
+arButton.style.backgroundColor = "#2563EB"; // Tailwind blue-600
+arButton.style.color = "#ffffff";
+arButton.style.border = "none";
+arButton.style.borderRadius = "9999px"; // full rounded
+arButton.style.cursor = "pointer";
+arButton.style.zIndex = "2000";
+arButton.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
+arButton.style.transition = "transform 0.2s ease, background-color 0.2s ease";
+arButton.onmouseenter = () => (arButton.style.backgroundColor = "#1E40AF"); // darker blue
+arButton.onmouseleave = () => (arButton.style.backgroundColor = "#2563EB");
+arButton.onmousedown = () => (arButton.style.transform = "translateX(-50%) scale(0.97)");
+arButton.onmouseup = () => (arButton.style.transform = "translateX(-50%) scale(1)");
+mountRef.current.appendChild(arButton);
+
 
       // Lights
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
