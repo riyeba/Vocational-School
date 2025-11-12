@@ -1741,12 +1741,13 @@ const GreenLeaveEvents = () => {
         window.speechSynthesis.speak(utterance);
       };
 
-      // 🔓 Unlock voice immediately (on first click anywhere)
+      
       const unlockVoice = () => {
         const silent = new SpeechSynthesisUtterance("");
         window.speechSynthesis.speak(silent);
         document.removeEventListener("click", unlockVoice);
         console.log("Voice unlocked.");
+        setTimeout(() => showStep(0), 100);
       };
       document.addEventListener("click", unlockVoice, { once: true });
 
