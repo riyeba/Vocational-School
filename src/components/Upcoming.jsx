@@ -1728,19 +1728,19 @@ const GreenLeaveEvents = () => {
 // Responsive + clear Start AR button
 arButton.textContent = "Start AR";
 Object.assign(arButton.style, {
-  position: "absolute",
+  position: "fixed",
   bottom: "5vh", // responsive spacing from bottom
-  left: "50%",
+  left: "40%",
   transform: "translateX(-50%)",
   padding: "clamp(10px, 2vh, 16px) clamp(24px, 5vw, 40px)", // responsive padding
-  fontSize: "clamp(14px, 2.5vw, 18px)", // responsive font
+  fontSize: "clamp(10px, 1.5vw, 14px)", // responsive font
   fontWeight: "600",
-  backgroundColor: "#2563EB", // Tailwind blue-600
+  backgroundColor: "#d70f6c", // Tailwind blue-600
   color: "#ffffff",
   border: "none",
   borderRadius: "9999px", // fully rounded
   cursor: "pointer",
-  zIndex: "2000",
+ 
   boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
   transition: "transform 0.2s ease, opacity 0.2s ease",
 });
