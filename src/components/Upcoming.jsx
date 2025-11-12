@@ -1708,6 +1708,7 @@ const GreenLeaveEvents = () => {
       renderer.domElement.style.left = "0";
       mountRef.current.appendChild(renderer.domElement);
 
+      // AR Button
       const arButton = ARButton.createButton(renderer, {
         optionalFeatures: ["local-floor", "dom-overlay"],
         domOverlay: { root: document.body },
@@ -1719,31 +1720,41 @@ const GreenLeaveEvents = () => {
       arButton.style.zIndex = "100";
       mountRef.current.appendChild(arButton);
 
-      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      scene.add(light);
-
+      // Lights
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      scene.add(hemiLight);
       const dirLight = new THREE.DirectionalLight(0xffffff, 1);
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // Speech function
+      // 🔊 Speech synthesis setup
       const speak = (text) => {
-        if ("speechSynthesis" in window) {
-          window.speechSynthesis.cancel(); // Stop any ongoing speech
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = "en-US";
-          utterance.pitch = 1;
-          utterance.rate = 1;
-          window.speechSynthesis.speak(utterance);
-        } else {
-          console.warn("Speech Synthesis not supported in this browser.");
+        if (!("speechSynthesis" in window)) {
+          console.warn("Speech Synthesis not supported.");
+          return;
         }
+        window.speechSynthesis.cancel(); // Stop previous utterances
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+        utterance.pitch = 1;
+        utterance.rate = 1;
+        window.speechSynthesis.speak(utterance);
       };
 
+      // 🔓 Unlock voice (bypass browser restriction)
+      const unlockVoice = () => {
+        const silent = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(silent);
+        document.removeEventListener("click", unlockVoice);
+      };
+      document.addEventListener("click", unlockVoice);
+
+      // AR session events
       renderer.xr.addEventListener("sessionstart", () => {
         console.log("AR Session Started!");
         setIsARActive(true);
         setCurrentStep(0);
+        unlockVoice(); // Ensure voice unlocked
         showStep(0);
       });
 
@@ -1754,12 +1765,14 @@ const GreenLeaveEvents = () => {
           .forEach((child) => scene.remove(child));
       });
 
+      // Animation loop
       renderer.setAnimationLoop(() => {
         const delta = clock.current.getDelta();
         if (mixerRef.current) mixerRef.current.update(delta);
         renderer.render(scene, camera);
       });
 
+      // Handle resize
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1767,6 +1780,7 @@ const GreenLeaveEvents = () => {
       };
       window.addEventListener("resize", handleResize);
 
+      // Show each step
       function showStep(index) {
         setCurrentStep(index);
         scene.children
@@ -1796,6 +1810,7 @@ const GreenLeaveEvents = () => {
         // 🔊 Speak the step text
         speak(step.text);
 
+        // Next step after 5 seconds
         if (index < steps.length - 1) {
           setTimeout(() => showStep(index + 1), 5000);
         }
@@ -1816,8 +1831,10 @@ const GreenLeaveEvents = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
+      {/* Three.js AR Canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
+      {/* Overlay showing step text */}
       {isARActive && (
         <div
           ref={overlayRef}
@@ -1830,12 +1847,17 @@ const GreenLeaveEvents = () => {
         </div>
       )}
 
+      {/* Pre-AR instructions */}
       {!isARActive && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4">
+        <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4 mb-6">
             <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
-            <p className="text-sm text-blue-600">
-              Click "Start AR" to begin the interactive hand washing guide
+          </div>
+
+          {/* Updated instruction box */}
+          <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-6">
+            <p className="text-base font-medium">
+              Tap <strong>“Start AR”</strong> below to begin your interactive hand-washing guide.
             </p>
           </div>
         </div>
