@@ -142,11 +142,9 @@ renderer.xr.addEventListener("sessionstart", () => {
   
   setIsARActive(true);
   setCurrentStep(0);
+  showStep(0);
   
-  // Start speaking immediately without delay
-  setTimeout(() => {
-    showStep(0);
-  }, 100); // Small delay to ensure voice API is ready
+   
 });
 
       renderer.xr.addEventListener("sessionend", () => {
