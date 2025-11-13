@@ -146,7 +146,7 @@ renderer.xr.addEventListener("sessionstart", () => {
   // Start speaking immediately without delay
   setTimeout(() => {
     showStep(0);
-  }, 200); // Small delay to ensure voice API is ready
+  }, 100); // Small delay to ensure voice API is ready
 });
 
       renderer.xr.addEventListener("sessionend", () => {
