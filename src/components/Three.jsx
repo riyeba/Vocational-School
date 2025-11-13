@@ -115,38 +115,39 @@ mountRef.current.appendChild(arButton);
       };
 
       
-      // const unlockVoice = () => {
-      //   const silent = new SpeechSynthesisUtterance("");
-      //   window.speechSynthesis.speak(silent);
-      //   document.removeEventListener("click", unlockVoice);
-      //   console.log("Voice unlocked.");
+      const unlockVoice = () => {
+        const silent = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(silent);
+        document.removeEventListener("click", unlockVoice);
+        console.log("Voice unlocked.");
         
-      // };
-      // document.addEventListener("click", unlockVoice, { once: true });
+      };
+      document.addEventListener("click", unlockVoice, { once: true });
 
       // AR session events
-renderer.xr.addEventListener("sessionstart", async () => {
+      // renderer.xr.addEventListener("sessionstart", () => {
+      //   console.log("AR Session Started!");
+      //   setIsARActive(true);
+      //   setCurrentStep(0);
+      //   showStep(0);
+      // });
+
+      // AR session events
+renderer.xr.addEventListener("sessionstart", () => {
   console.log("AR Session Started!");
   
-  // Unlock voice immediately when AR starts
+  // Unlock and start voice immediately
   const silent = new SpeechSynthesisUtterance("");
   window.speechSynthesis.speak(silent);
   
-  // Small delay to ensure voice is ready
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
   setIsARActive(true);
   setCurrentStep(0);
-  showStep(0);
+  
+  // Start speaking immediately without delay
+  setTimeout(() => {
+    showStep(0);
+  }, 200); // Small delay to ensure voice API is ready
 });
-
-      // AR session events
-      renderer.xr.addEventListener("sessionstart", () => {
-        console.log("AR Session Started!");
-        setIsARActive(true);
-        setCurrentStep(0);
-        showStep(0);
-      });
 
       renderer.xr.addEventListener("sessionend", () => {
         setIsARActive(false);
