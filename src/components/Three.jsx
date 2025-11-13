@@ -142,9 +142,11 @@
   
 //   setIsARActive(true);
 //   setCurrentStep(0);
-//   showStep(0);
   
-   
+//   // Start speaking immediately without delay
+//   setTimeout(() => {
+//     showStep(0);
+//   }, 200); // 
 // });
 
 //       renderer.xr.addEventListener("sessionend", () => {
@@ -273,26 +275,18 @@ const steps = [
   { text: "Step 7: Rinse hands thoroughly", model: "/image/two_hands.glb" },
 ];
 
-const Three = () => {
+export default function Three() {
   const mountRef = useRef(null);
   const overlayRef = useRef(null);
   const mixerRef = useRef(null);
   const clock = useRef(new THREE.Clock());
-  const stepTimerRef = useRef(null);
-  const currentStepRef = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [isARActive, setIsARActive] = useState(false);
 
   useEffect(() => {
-    if (!mountRef.current) return;
-    
     let scene, camera, renderer;
-    let isInitialized = false;
 
     const init = () => {
-      if (isInitialized) return;
-      isInitialized = true;
-      
       scene = new THREE.Scene();
 
       camera = new THREE.PerspectiveCamera(
@@ -312,18 +306,17 @@ const Three = () => {
       renderer.domElement.style.left = "0";
       mountRef.current.appendChild(renderer.domElement);
 
-      // AR Button
+      // ===== AR Button styling =====
       const arButton = ARButton.createButton(renderer, {
         optionalFeatures: ["local-floor", "dom-overlay"],
         domOverlay: { root: document.body },
       });
 
-      // Responsive + clear Start AR button
       arButton.textContent = "Start AR";
       Object.assign(arButton.style, {
         position: "fixed",
         bottom: "5vh",
-        left: "50%",
+        left: "40%",
         transform: "translateX(-50%)",
         padding: "clamp(10px, 2vh, 16px) clamp(24px, 5vw, 40px)",
         fontSize: "clamp(10px, 1.5vw, 14px)",
@@ -335,58 +328,84 @@ const Three = () => {
         cursor: "pointer",
         boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
         transition: "transform 0.2s ease, opacity 0.2s ease",
-        zIndex: "100",
       });
-
       arButton.onmouseenter = () => (arButton.style.opacity = "0.9");
       arButton.onmouseleave = () => (arButton.style.opacity = "1");
-      arButton.onmousedown = () => (arButton.style.transform = "translateX(-50%) scale(0.97)");
-      arButton.onmouseup = () => (arButton.style.transform = "translateX(-50%) scale(1)");
+      arButton.onmousedown = () =>
+        (arButton.style.transform = "translateX(-50%) scale(0.97)");
+      arButton.onmouseup = () =>
+        (arButton.style.transform = "translateX(-50%) scale(1)");
 
       mountRef.current.appendChild(arButton);
 
-      // Lights
+      // ===== Lights =====
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
       scene.add(hemiLight);
       const dirLight = new THREE.DirectionalLight(0xffffff, 1);
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // Speech synthesis
-      const speak = (text) => {
-        if (!("speechSynthesis" in window)) {
-          console.warn("Speech Synthesis not supported.");
-          return;
-        }
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "en-US";
-        utterance.pitch = 1;
-        utterance.rate = 1;
-        window.speechSynthesis.speak(utterance);
+      // ===== Unlock voice on first click =====
+      const unlockVoice = () => {
+        const silent = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(silent);
+        document.removeEventListener("click", unlockVoice);
+        console.log("Voice unlocked.");
       };
+      document.addEventListener("click", unlockVoice, { once: true });
 
-      // Show steps function
+      // ===== AR session events =====
+      renderer.xr.addEventListener("sessionstart", () => {
+        console.log("AR Session Started!");
+        const silent = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(silent);
+
+        setIsARActive(true);
+        setCurrentStep(0);
+
+        // Start first step after small delay
+        setTimeout(() => {
+          showStep(0);
+        }, 500);
+      });
+
+      renderer.xr.addEventListener("sessionend", () => {
+        setIsARActive(false);
+        scene.children
+          .filter((child) => !(child instanceof THREE.Light))
+          .forEach((child) => scene.remove(child));
+        window.speechSynthesis.cancel(); // stop speech
+      });
+
+      // ===== Handle resizing =====
+      const handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
+      window.addEventListener("resize", handleResize);
+
+      // ===== Animation loop =====
+      renderer.setAnimationLoop(() => {
+        const delta = clock.current.getDelta();
+        if (mixerRef.current) mixerRef.current.update(delta);
+        renderer.render(scene, camera);
+      });
+
+      // ===== showStep function with speech chaining =====
       function showStep(index) {
-        console.log("showStep called with index:", index);
-        
-        // Clear any existing timer first
-        if (stepTimerRef.current) {
-          clearTimeout(stepTimerRef.current);
-          stepTimerRef.current = null;
-        }
+        if (index >= steps.length) return;
 
-        currentStepRef.current = index;
         setCurrentStep(index);
-        
-        // Remove previous models (keep lights)
+
+        // Remove old models but keep lights
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
           .forEach((child) => scene.remove(child));
 
         const step = steps[index];
         const loader = new GLTFLoader();
-        
+
         loader.load(
           step.model,
           (gltf) => {
@@ -405,87 +424,25 @@ const Three = () => {
           (error) => console.error("Error loading model:", error)
         );
 
-        // Speak the step text
-        speak(step.text);
+        // 🔊 Speak and chain to next step
+        const utterance = new SpeechSynthesisUtterance(step.text);
+        utterance.lang = "en-US";
+        utterance.pitch = 1;
+        utterance.rate = 1;
 
-        // Move to next step after 5 seconds
-        if (index < steps.length - 1) {
-          stepTimerRef.current = setTimeout(() => showStep(index + 1), 5000);
-        } else {
-          console.log("Tutorial complete!");
-        }
+        utterance.onend = () => {
+          if (index < steps.length - 1) {
+            setTimeout(() => showStep(index + 1), 1000); // wait 1s then next
+          }
+        };
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
       }
 
-      // AR session start
-      const handleSessionStart = () => {
-        console.log("AR Session Started!");
-        
-        // Clear any existing timers
-        if (stepTimerRef.current) {
-          clearTimeout(stepTimerRef.current);
-          stepTimerRef.current = null;
-        }
-        
-        // Unlock voice with silent utterance
-        const silent = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(silent);
-        
-        currentStepRef.current = 0;
-        setIsARActive(true);
-        setCurrentStep(0);
-        
-        // Small delay to ensure voice is unlocked, then start from step 0
-        setTimeout(() => {
-          showStep(0);
-        }, 200);
-      };
-      
-      renderer.xr.addEventListener("sessionstart", handleSessionStart);
-
-      // AR session end
-      const handleSessionEnd = () => {
-        console.log("AR Session Ended!");
-        
-        // Clear timer and stop voice
-        if (stepTimerRef.current) {
-          clearTimeout(stepTimerRef.current);
-          stepTimerRef.current = null;
-        }
-        window.speechSynthesis.cancel();
-        
-        currentStepRef.current = 0;
-        setIsARActive(false);
-        setCurrentStep(0);
-        
-        // Clean up scene
-        scene.children
-          .filter((child) => !(child instanceof THREE.Light))
-          .forEach((child) => scene.remove(child));
-      };
-      
-      renderer.xr.addEventListener("sessionend", handleSessionEnd);
-
-      // Animation loop
-      renderer.setAnimationLoop(() => {
-        const delta = clock.current.getDelta();
-        if (mixerRef.current) mixerRef.current.update(delta);
-        renderer.render(scene, camera);
-      });
-
-      // Handle resize
-      const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      };
-      window.addEventListener("resize", handleResize);
-
+      // Cleanup
       return () => {
-        if (stepTimerRef.current) clearTimeout(stepTimerRef.current);
-        window.speechSynthesis.cancel();
         renderer.setAnimationLoop(null);
-        renderer.xr.removeEventListener("sessionstart", handleSessionStart);
-        renderer.xr.removeEventListener("sessionend", handleSessionEnd);
         window.removeEventListener("resize", handleResize);
       };
     };
@@ -493,12 +450,11 @@ const Three = () => {
     const cleanup = init();
     return () => {
       if (cleanup) cleanup();
-      if (mountRef.current) {
-        mountRef.current.innerHTML = "";
-      }
+      if (mountRef.current) mountRef.current.innerHTML = "";
     };
-  }, []); // Empty dependency array - only run once
+  }, []);
 
+  // ===== UI elements =====
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Three.js AR Canvas */}
@@ -521,19 +477,19 @@ const Three = () => {
       {!isARActive && (
         <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none">
           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4 mb-6">
-            <h2 className="text-xl font-bold mb-2">Hand Washing AR Tutorial</h2>
+            <h2 className="text-xl font-bold mb-2">
+              Hand Washing AR Tutorial
+            </h2>
           </div>
 
           <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-8">
             <p className="text-base font-medium">
-              Tap <strong>"Sta"</strong> below to begin your
-              interactive hand-washing guide.
+              Tap <strong>“Start AR”</strong> below to begin your interactive
+              hand-washing guide.
             </p>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-export default Three;
+}
