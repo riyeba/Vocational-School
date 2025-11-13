@@ -136,7 +136,7 @@ function Header() {
               className="text-2xl font-bold text-green-500"
               onClick={() => handleMobileNavClick()}
             >
-              GreenLeaf
+              Vocational School
             </NavLink>
             <button 
               onClick={closeMenu}

@@ -163,7 +163,7 @@ export default function Three() {
           (error) => console.error("Error loading model:", error)
         );
 
-        // 🔊 Speak and chain to next step
+        // Speak and chain to next step
         const utterance = new SpeechSynthesisUtterance(step.text);
         utterance.lang = "en-US";
         utterance.pitch = 1;
@@ -217,7 +217,7 @@ export default function Three() {
         <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none">
           <div className="bg-white bg-opacity-90 text-gray-800 px-8 py-6 rounded-lg text-center max-w-sm mx-4 mb-6">
             <h2 className="text-xl font-bold mb-2">
-              Hand Washing Steps (Three.JS)
+              Hand Washing Tutorial (Three.JS)
             </h2>
           </div>
 
