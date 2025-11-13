@@ -498,7 +498,7 @@ const Three = () => {
 
           <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-8">
             <p className="text-base font-medium">
-              Tap <strong>"Start AR"</strong> below to begin your
+              Tap <strong>"Start A"</strong> below to begin your
               interactive hand-washing guide.
             </p>
           </div>
