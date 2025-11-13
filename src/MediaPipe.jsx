@@ -22,6 +22,7 @@ export default function MediaPipe() {
   const cameraRef = useRef(null);
   const handsRef = useRef(null);
   const fpsCounterRef = useRef({ frames: 0, lastTime: Date.now() });
+const lastFrameTimeRef = useRef(Date.now()); 
 
   const handwashingSteps = [
     {
@@ -259,6 +260,10 @@ Respond ONLY in this JSON format:
           });
 
           hands.onResults((results) => {
+               const now = Date.now();
+            const frameLatency = now - lastFrameTimeRef.current;
+            setLatency(frameLatency);
+            lastFrameTimeRef.current = now;
             updateFPS();
             
             canvasCtx.save();
@@ -447,7 +452,7 @@ Respond ONLY in this JSON format:
         <div className="absolute top-[45px] sm:top-[60px] md:top-[80px] lg:top-[90px] right-1 sm:right-2 bg-black/90 rounded px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 space-y-1 border-2 border-cyan-400/50 shadow-lg min-w-[65px] sm:min-w-[75px] md:min-w-[85px] z-10">
           <div className="text-green-400 font-bold text-[10px] sm:text-[11px] md:text-xs whitespace-nowrap">FPS: {fps}</div>
           <div className="text-yellow-400 text-[10px] sm:text-[11px] md:text-xs whitespace-nowrap">Hands: {handsDetected}</div>
-          <div className="text-purple-400 text-[9px] sm:text-[10px] md:text-[11px] whitespace-nowrap">MediaPipe</div>
+          <div className="text-purple-400 text-[9px] sm:text-[10px] md:text-[11px] whitespace-nowrap">Latency: {latency} ms</div>
         </div>
 
         {/* Landmark Positions Panel */}
@@ -490,3 +495,4 @@ Respond ONLY in this JSON format:
     </div>
   );
 }
+
