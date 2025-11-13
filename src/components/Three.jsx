@@ -278,14 +278,21 @@ const Three = () => {
   const overlayRef = useRef(null);
   const mixerRef = useRef(null);
   const clock = useRef(new THREE.Clock());
+  const stepTimerRef = useRef(null);
+  const currentStepRef = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [isARActive, setIsARActive] = useState(false);
 
   useEffect(() => {
+    if (!mountRef.current) return;
+    
     let scene, camera, renderer;
-    let stepTimer = null;
+    let isInitialized = false;
 
     const init = () => {
+      if (isInitialized) return;
+      isInitialized = true;
+      
       scene = new THREE.Scene();
 
       camera = new THREE.PerspectiveCamera(
@@ -361,12 +368,15 @@ const Three = () => {
 
       // Show steps function
       function showStep(index) {
+        console.log("showStep called with index:", index);
+        
         // Clear any existing timer first
-        if (stepTimer) {
-          clearTimeout(stepTimer);
-          stepTimer = null;
+        if (stepTimerRef.current) {
+          clearTimeout(stepTimerRef.current);
+          stepTimerRef.current = null;
         }
 
+        currentStepRef.current = index;
         setCurrentStep(index);
         
         // Remove previous models (keep lights)
@@ -400,38 +410,50 @@ const Three = () => {
 
         // Move to next step after 5 seconds
         if (index < steps.length - 1) {
-          stepTimer = setTimeout(() => showStep(index + 1), 5000);
+          stepTimerRef.current = setTimeout(() => showStep(index + 1), 5000);
+        } else {
+          console.log("Tutorial complete!");
         }
       }
 
       // AR session start
-      renderer.xr.addEventListener("sessionstart", () => {
+      const handleSessionStart = () => {
         console.log("AR Session Started!");
+        
+        // Clear any existing timers
+        if (stepTimerRef.current) {
+          clearTimeout(stepTimerRef.current);
+          stepTimerRef.current = null;
+        }
         
         // Unlock voice with silent utterance
         const silent = new SpeechSynthesisUtterance("");
         window.speechSynthesis.speak(silent);
         
+        currentStepRef.current = 0;
         setIsARActive(true);
+        setCurrentStep(0);
         
         // Small delay to ensure voice is unlocked, then start from step 0
         setTimeout(() => {
-          setCurrentStep(0);
           showStep(0);
-        }, 150);
-      });
+        }, 200);
+      };
+      
+      renderer.xr.addEventListener("sessionstart", handleSessionStart);
 
       // AR session end
-      renderer.xr.addEventListener("sessionend", () => {
+      const handleSessionEnd = () => {
         console.log("AR Session Ended!");
         
         // Clear timer and stop voice
-        if (stepTimer) {
-          clearTimeout(stepTimer);
-          stepTimer = null;
+        if (stepTimerRef.current) {
+          clearTimeout(stepTimerRef.current);
+          stepTimerRef.current = null;
         }
         window.speechSynthesis.cancel();
         
+        currentStepRef.current = 0;
         setIsARActive(false);
         setCurrentStep(0);
         
@@ -439,7 +461,9 @@ const Three = () => {
         scene.children
           .filter((child) => !(child instanceof THREE.Light))
           .forEach((child) => scene.remove(child));
-      });
+      };
+      
+      renderer.xr.addEventListener("sessionend", handleSessionEnd);
 
       // Animation loop
       renderer.setAnimationLoop(() => {
@@ -457,9 +481,11 @@ const Three = () => {
       window.addEventListener("resize", handleResize);
 
       return () => {
-        if (stepTimer) clearTimeout(stepTimer);
+        if (stepTimerRef.current) clearTimeout(stepTimerRef.current);
         window.speechSynthesis.cancel();
         renderer.setAnimationLoop(null);
+        renderer.xr.removeEventListener("sessionstart", handleSessionStart);
+        renderer.xr.removeEventListener("sessionend", handleSessionEnd);
         window.removeEventListener("resize", handleResize);
       };
     };
@@ -467,9 +493,11 @@ const Three = () => {
     const cleanup = init();
     return () => {
       if (cleanup) cleanup();
-      if (mountRef.current) mountRef.current.innerHTML = "";
+      if (mountRef.current) {
+        mountRef.current.innerHTML = "";
+      }
     };
-  }, []);
+  }, []); // Empty dependency array - only run once
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
@@ -498,7 +526,7 @@ const Three = () => {
 
           <div className="bg-blue-600 text-white text-center px-6 py-3 rounded-lg shadow-lg max-w-xs mx-4 relative -mt-8">
             <p className="text-base font-medium">
-              Tap <strong>"Start A"</strong> below to begin your
+              Tap <strong>"Sta"</strong> below to begin your
               interactive hand-washing guide.
             </p>
           </div>
