@@ -13,8 +13,9 @@ import { Route, Router, Routes } from "react-router";
 import Header from "./components/Header";
 
 
-import MediaPipe from "./MediaPipe";
+
 import Three from "./components/Three";
+import MediaPipe from "./components/MediaPipe";
 
 
 
