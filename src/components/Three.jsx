@@ -115,14 +115,30 @@ mountRef.current.appendChild(arButton);
       };
 
       
-      const unlockVoice = () => {
-        const silent = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(silent);
-        document.removeEventListener("click", unlockVoice);
-        console.log("Voice unlocked.");
+      // const unlockVoice = () => {
+      //   const silent = new SpeechSynthesisUtterance("");
+      //   window.speechSynthesis.speak(silent);
+      //   document.removeEventListener("click", unlockVoice);
+      //   console.log("Voice unlocked.");
         
-      };
-      document.addEventListener("click", unlockVoice, { once: true });
+      // };
+      // document.addEventListener("click", unlockVoice, { once: true });
+
+      // AR session events
+renderer.xr.addEventListener("sessionstart", async () => {
+  console.log("AR Session Started!");
+  
+  // Unlock voice immediately when AR starts
+  const silent = new SpeechSynthesisUtterance("");
+  window.speechSynthesis.speak(silent);
+  
+  // Small delay to ensure voice is ready
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  setIsARActive(true);
+  setCurrentStep(0);
+  showStep(0);
+});
 
       // AR session events
       renderer.xr.addEventListener("sessionstart", () => {
