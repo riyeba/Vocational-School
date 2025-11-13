@@ -390,23 +390,19 @@ Respond ONLY in this JSON format:
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 p-4">
         <div className="text-center mb-6 md:mb-8">
-          <div className="text-5xl sm:text-6xl md:text-8xl mb-4 md:mb-6">🧼</div>
+         
           <h1 className="text-white text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 px-2">
-            Hand Hygiene Training
+            Hand Hygiene Training (MediaPipe)
           </h1>
-          <p className="text-blue-200 text-base sm:text-lg md:text-xl mb-2 px-4">
-            AI-Powered AR Training System
-          </p>
-          <p className="text-blue-300 text-sm sm:text-base px-4">
-            Learn the proper 7-step handwashing technique
-          </p>
+         
+         
         </div>
 
         <button
           onClick={startTraining}
           className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-lg sm:text-xl md:text-2xl font-bold rounded-xl md:rounded-2xl px-8 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 shadow-2xl transform hover:scale-105 transition-all"
         >
-          🚀 Start Training
+          Start Training
         </button>
 
         <div className="mt-6 md:mt-8 text-center px-4">
